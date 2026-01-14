@@ -19,36 +19,7 @@ import org.bukkit.util.Transformation;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
-
-public final class FrogShip extends JavaPlugin implements CommandExecutor, org.bukkit.event.Listener {
-
-@org.bukkit.event.EventHandler
-public void onShipInteract(org.bukkit.event.player.PlayerInteractEntityEvent e) {
-    Entity clicked = e.getRightClicked();
-    
-    // Проверяем, что кликнули по сущности нашего плагина
-    if (!clicked.getPersistentDataContainer().has(shipKey, PersistentDataType.BYTE)) return;
-
-    // Определяем "корень" (центральный блок)
-    // Если кликнули по части (пассажиру), берем его Vehicle. Если кликнули по корню - берем его самого.
-    Entity root = (clicked.getVehicle() != null) ? clicked.getVehicle() : clicked;
-
-    // Ищем сиденье среди пассажиров корня
-    for (Entity passenger : root.getPassengers()) {
-        if (passenger instanceof org.bukkit.entity.ArmorStand seat) {
-            // Проверяем, что это именно наше сиденье и оно пустое
-            if (seat.getPassengers().isEmpty() && seat.getPersistentDataContainer().has(shipKey, PersistentDataType.BYTE)) {
-                seat.addPassenger(e.getPlayer());
-                e.getPlayer().sendMessage("§aВы сели на корабль!");
-                e.setCancelled(true); // Отменяем стандартное действие (например, открытие меню брони стойки)
-                return; 
-            }
-        }
-    }
-}
+public final class FrogShip extends JavaPlugin implements CommandExecutor {
 
     private final List<BlockDisplay> activeShips = new ArrayList<>();
     private NamespacedKey shipKey;
@@ -58,9 +29,6 @@ public void onShipInteract(org.bukkit.event.player.PlayerInteractEntityEvent e) 
         shipKey = new NamespacedKey(this, "is_frog_ship");
         getCommand("spawnship").setExecutor(this);
         cleanAllWorldsFromShips();
-         // Добавь это:
-    getServer().getPluginManager().registerEvents(this, this);
-    cleanAllWorldsFromShips();
     }
 
     @Override
@@ -156,32 +124,7 @@ private BlockDisplay createPart(Location loc, float offsetX, float offsetZ) {
     return part;
 }
 
-private org.bukkit.entity.ArmorStand createSeat(Location loc, float offsetX, float offsetZ) {
-    // Сдвигаем на 0.5 вниз, чтобы игрок визуально сидел на блоке, а не висел над ним
-    Location seatLoc = loc.clone().add(offsetX, -0.5, offsetZ); 
-    org.bukkit.entity.ArmorStand seat = (org.bukkit.entity.ArmorStand) seatLoc.getWorld().spawnEntity(seatLoc, EntityType.ARMOR_STAND);
-    
-    seat.setVisible(false);
-    seat.setMarker(true); // Чтобы не мешал кликать сквозь себя
-    seat.setGravity(false);
-    seat.getPersistentDataContainer().set(shipKey, PersistentDataType.BYTE, (byte) 1);
-    
-    return seat;
-}
 
-private org.bukkit.entity.ArmorStand createSeat(Location loc, float offsetX, float offsetZ) {
-    // Сдвигаем локацию сразу, чтобы ArmorStand заспавнился в нужном месте относительно центра
-    Location seatLoc = loc.clone().add(offsetX, -0.5, offsetZ); 
-    org.bukkit.entity.ArmorStand seat = (org.bukkit.entity.ArmorStand) seatLoc.getWorld().spawnEntity(seatLoc, EntityType.ARMOR_STAND);
-    
-    seat.setVisible(false);
-    seat.setMarker(true); // Чтобы хитбокс стойки не мешал кликать по блокам
-    seat.setSmall(true);
-    seat.setGravity(false);
-    seat.getPersistentDataContainer().set(shipKey, PersistentDataType.BYTE, (byte) 1);
-    
-    return seat;
-}
 
 
 
@@ -201,9 +144,6 @@ private org.bukkit.entity.ArmorStand createSeat(Location loc, float offsetX, flo
                 root.addPassenger(part);
             }
         }
-
-            root.addPassenger(createSeat(startLoc, -1.0f, 0.0f));
-    root.addPassenger(createSeat(startLoc, 1.0f, 0.0f));
 
         // 3. Запускаем задачу движения
         new BukkitRunnable() {
