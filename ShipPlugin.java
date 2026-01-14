@@ -1,135 +1,266 @@
-package me.yourname; // Укажите ваш пакет
+package AlexTro.frogShip;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.BlockDisplay;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Shulker;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Transformation;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ShipPlugin extends JavaPlugin implements CommandExecutor {
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 
-    // Список для отслеживания активных кораблей
+public final class FrogShip extends JavaPlugin implements CommandExecutor, org.bukkit.event.Listener {
+
+@org.bukkit.event.EventHandler
+public void onShipInteract(org.bukkit.event.player.PlayerInteractEntityEvent e) {
+    Entity clicked = e.getRightClicked();
+    
+    // Проверяем, что кликнули по сущности нашего плагина
+    if (!clicked.getPersistentDataContainer().has(shipKey, PersistentDataType.BYTE)) return;
+
+    // Определяем "корень" (центральный блок)
+    // Если кликнули по части (пассажиру), берем его Vehicle. Если кликнули по корню - берем его самого.
+    Entity root = (clicked.getVehicle() != null) ? clicked.getVehicle() : clicked;
+
+    // Ищем сиденье среди пассажиров корня
+    for (Entity passenger : root.getPassengers()) {
+        if (passenger instanceof org.bukkit.entity.ArmorStand seat) {
+            // Проверяем, что это именно наше сиденье и оно пустое
+            if (seat.getPassengers().isEmpty() && seat.getPersistentDataContainer().has(shipKey, PersistentDataType.BYTE)) {
+                seat.addPassenger(e.getPlayer());
+                e.getPlayer().sendMessage("§aВы сели на корабль!");
+                e.setCancelled(true); // Отменяем стандартное действие (например, открытие меню брони стойки)
+                return; 
+            }
+        }
+    }
+}
+
     private final List<BlockDisplay> activeShips = new ArrayList<>();
+    private NamespacedKey shipKey;
 
     @Override
     public void onEnable() {
+        shipKey = new NamespacedKey(this, "is_frog_ship");
         getCommand("spawnship").setExecutor(this);
-        getLogger().info("ShipPlugin запущен!");
+        cleanAllWorldsFromShips();
+         // Добавь это:
+    getServer().getPluginManager().registerEvents(this, this);
+    cleanAllWorldsFromShips();
     }
 
     @Override
     public void onDisable() {
-        // Очистка всех кораблей при выключении сервера или перезагрузке
         removeAllShips();
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player player)) return true;
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("Команда только для игроков!");
+            return true;
+        }
 
-        // Удаляем все старые корабли перед спавном нового
-        removeAllShips();
+        // Проверка на наличие 3-х аргументов
+        if (args.length < 3) {
+            player.sendMessage("§cИспользование: /spawnship <x> <y> <z>");
+            return true;
+        }
 
-        Location startLoc = player.getLocation();
-        spawnMovingPlatform(startLoc);
-        
-        player.sendMessage("§eКорабль заспавнен!");
+        try {
+            // Считываем целые числа
+            int x = Integer.parseInt(args[0]);
+            int y = Integer.parseInt(args[1]);
+            int z = Integer.parseInt(args[2]);
+
+            // Добавляем 0.5, чтобы корабль был в центре блока, а не на углу
+            Location targetLoc = new Location(player.getWorld(), x + 0.5, y + 0.5, z + 0.5);
+
+            removeAllShips();
+            cleanAllWorldsFromShips();
+
+            spawnMovingPlatform(targetLoc);
+            player.sendMessage(String.format("§eКорабль заспавнен на координатах: %d, %d, %d", x, y, z));
+
+        } catch (NumberFormatException e) {
+            player.sendMessage("§cОшибка: Координаты должны быть целыми числами!");
+        }
+
         return true;
     }
 
-    /**
-     * Удаляет все существующие корабли
-     */
-    private void removeAllShips() {
-        for (BlockDisplay ship : activeShips) {
-            if (ship != null && !ship.isDead()) {
-                ship.getPassengers().forEach(org.bukkit.entity.Entity::remove);
-                ship.remove();
+
+
+    private void removeShip(BlockDisplay ship, BukkitRunnable task) {
+    if (ship != null) {
+        // Удаляем "детей" (пассажиров)
+        ship.getPassengers().forEach(Entity::remove);
+        // Удаляем "родителя"
+        ship.remove();
+        activeShips.remove(ship);
+        Bukkit.broadcastMessage("§7Корабль уплыл далеко и исчез...");
+    }
+    if (task != null) task.cancel();
+}
+
+private void removeAllShips() {
+    for (BlockDisplay ship : new ArrayList<>(activeShips)) {
+        if (ship != null) {
+            // Удаляем всех прикрепленных пассажиров перед удалением корня
+            ship.getPassengers().forEach(Entity::remove);
+            ship.remove();
+        }
+    }
+    activeShips.clear();
+}
+
+
+private void cleanAllWorldsFromShips() {
+    Bukkit.getWorlds().forEach(world -> {
+        for (Entity entity : world.getEntitiesByClass(BlockDisplay.class)) {
+            if (entity.getPersistentDataContainer().has(shipKey, PersistentDataType.BYTE)) {
+                // Сначала удаляем пассажиров, если они есть
+                entity.getPassengers().forEach(Entity::remove); 
+                entity.remove();
             }
         }
-        activeShips.clear();
-    }
+    });
+}
 
-    /**
-     * Математика движения (Синусоида по оси X)
-     */
-    private Location calculateNextLocation(Location startLoc, double time, double range) {
-        double offsetX = Math.sin(time) * range;
-        return startLoc.clone().add(offsetX, 0, 0);
-    }
+private BlockDisplay createPart(Location loc, float offsetX, float offsetZ) {
+    BlockDisplay part = (BlockDisplay) loc.getWorld().spawnEntity(loc, EntityType.BLOCK_DISPLAY);
+    part.setBlock(Material.OAK_PLANKS.createBlockData());
+    part.getPersistentDataContainer().set(shipKey, PersistentDataType.BYTE, (byte) 1);
 
-    /**
-     * Создание невидимого шалкера для твердой коллизии
-     */
-    private Shulker spawnCollision(Location loc) {
-        Shulker shulker = (Shulker) loc.getWorld().spawnEntity(loc, EntityType.SHULKER);
-        shulker.setInvisible(true);
-        shulker.setAI(false);
-        shulker.setInvulnerable(true);
-        shulker.setSilent(true);
-        shulker.setPersistent(false); // Не сохранять в файлах мира
-        return shulker;
-    }
+    Transformation transformation = part.getTransformation();
+    // offsetX и offsetZ позволяют блокам встать рядом (на расстоянии 1 блока друг от друга)
+    transformation.getTranslation().set(offsetX - 0.5f, -0.5f, offsetZ - 0.5f);
+    part.setTransformation(transformation);
 
-    /**
-     * Основная логика спавна и движения
-     */
-    private void spawnMovingPlatform(Location startLoc) {
-        // Создаем визуальную часть
-        BlockDisplay ship = (BlockDisplay) startLoc.getWorld().spawnEntity(startLoc, EntityType.BLOCK_DISPLAY);
-        ship.setBlock(Material.OAK_PLANKS.createBlockData());
-        activeShips.add(ship);
+    part.setInterpolationDuration(2);
+    part.setInterpolationDelay(0);
+    return part;
+}
 
-        // Создаем коллизию и привязываем к визуальной части
-        Shulker collision = spawnCollision(startLoc);
-        ship.addPassenger(collision);
+private org.bukkit.entity.ArmorStand createSeat(Location loc, float offsetX, float offsetZ) {
+    // Сдвигаем на 0.5 вниз, чтобы игрок визуально сидел на блоке, а не висел над ним
+    Location seatLoc = loc.clone().add(offsetX, -0.5, offsetZ); 
+    org.bukkit.entity.ArmorStand seat = (org.bukkit.entity.ArmorStand) seatLoc.getWorld().spawnEntity(seatLoc, EntityType.ARMOR_STAND);
+    
+    seat.setVisible(false);
+    seat.setMarker(true); // Чтобы не мешал кликать сквозь себя
+    seat.setGravity(false);
+    seat.getPersistentDataContainer().set(shipKey, PersistentDataType.BYTE, (byte) 1);
+    
+    return seat;
+}
 
-        // Настройка плавности
-        ship.setInterpolationDuration(2);
-        ship.setInterpolationDelay(0);
+private org.bukkit.entity.ArmorStand createSeat(Location loc, float offsetX, float offsetZ) {
+    // Сдвигаем локацию сразу, чтобы ArmorStand заспавнился в нужном месте относительно центра
+    Location seatLoc = loc.clone().add(offsetX, -0.5, offsetZ); 
+    org.bukkit.entity.ArmorStand seat = (org.bukkit.entity.ArmorStand) seatLoc.getWorld().spawnEntity(seatLoc, EntityType.ARMOR_STAND);
+    
+    seat.setVisible(false);
+    seat.setMarker(true); // Чтобы хитбокс стойки не мешал кликать по блокам
+    seat.setSmall(true);
+    seat.setGravity(false);
+    seat.getPersistentDataContainer().set(shipKey, PersistentDataType.BYTE, (byte) 1);
+    
+    return seat;
+}
 
+
+
+
+        private void spawnMovingPlatform(Location startLoc) {
+        // 1. Создаем центральный блок (корень всей конструкции)
+        BlockDisplay root = createPart(startLoc, 0, 0);
+        activeShips.add(root);
+
+        // 2. Создаем сетку блоков вокруг центра и привязываем их как пассажиров
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                if (x == 0 && z == 0) continue; // Пропускаем центр, он уже в списке root
+                
+                // Создаем часть платформы и сажаем её на root
+                BlockDisplay part = createPart(startLoc, x, z);
+                root.addPassenger(part);
+            }
+        }
+
+            root.addPassenger(createSeat(startLoc, -1.0f, 0.0f));
+    root.addPassenger(createSeat(startLoc, 1.0f, 0.0f));
+
+        // 3. Запускаем задачу движения
         new BukkitRunnable() {
             double time = 0;
-            final double range = 5.0;
+            final double range = 5.0; // Амплитуда движения
+            final double maxDistanceSq = Math.pow(64, 2); // 4 чанка (64 блока)
 
             @Override
             public void run() {
-                // ПРОВЕРКА: Если чанк выгрузился (игрок ушел далеко)
-                if (!ship.getLocation().getChunk().isLoaded()) {
-                    ship.remove();
-                    collision.remove();
-                    activeShips.remove(ship);
-                    Bukkit.broadcastMessage("§7Корабль уплыл далеко ...");
-                    this.cancel();
+                // Проверка на валидность центрального блока и загрузку чанка
+                if (root.isDead() || !root.isValid() || !root.getLocation().getChunk().isLoaded()) {
+                    removeShip(root, this);
                     return;
                 }
 
-                // Проверка на удаление (например, через команду /spawnship)
-                if (ship.isDead() || !ship.isValid()) {
-                    collision.remove();
-                    this.cancel();
+                // Проверка: есть ли игроки в радиусе 4 чанков
+                boolean playerNearby = root.getWorld().getPlayers().stream()
+                        .anyMatch(p -> p.getLocation().distanceSquared(root.getLocation()) <= maxDistanceSq);
+
+                if (!playerNearby) {
+                    removeShip(root, this);
                     return;
                 }
 
-                // Движение
-                Location nextLoc = calculateNextLocation(startLoc, time, range);
-                ship.teleport(nextLoc);
+                // Рассчитываем новую позицию для центрального блока
+                double offsetX = Math.sin(time) * range;
+                Location nextLoc = startLoc.clone().add(offsetX, 0, 0);
+
+                // Телепортируем ТОЛЬКО центральный блок (пассажиры переместятся автоматически)
+                root.teleport(nextLoc);
                 
-                // Важно обновлять трансформацию для работы интерполяции
-                ship.setTransformation(ship.getTransformation());
+                // Обновляем интерполяцию для всех 9 блоков, чтобы движение было плавным
+                updateInterpolation(root);
 
-                time += 0.05; // Скорость
+                // Увеличиваем время (скорость движения)
+                time += 0.03;
             }
+
+            /**
+             * Вспомогательный метод для обновления интерполяции у всей структуры
+             */
+            private void updateInterpolation(BlockDisplay rootEntity) {
+                // Обновляем главный блок
+                rootEntity.setInterpolationDuration(2);
+                rootEntity.setInterpolationDelay(0);
+                
+                // Обновляем всех его пассажиров
+                for (org.bukkit.entity.Entity passenger : rootEntity.getPassengers()) {
+                    if (passenger instanceof BlockDisplay bd) {
+                        bd.setInterpolationDuration(2);
+                        bd.setInterpolationDelay(0);
+                    }
+                }
+            }
+            
         }.runTaskTimer(this, 0L, 2L);
     }
+
+    
 }
