@@ -16,6 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Transformation;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,11 +25,14 @@ public final class FrogShip extends JavaPlugin implements CommandExecutor {
     private final List<BlockDisplay> activeShips = new ArrayList<>();
     private NamespacedKey shipKey;
 
+      private org.bukkit.entity.ArmorStand seat; 
+
     @Override
     public void onEnable() {
         shipKey = new NamespacedKey(this, "is_frog_ship");
         getCommand("spawnship").setExecutor(this);
         cleanAllWorldsFromShips();
+        getCommand("sitonship").setExecutor(this);
     }
 
     @Override
@@ -37,25 +41,39 @@ public final class FrogShip extends JavaPlugin implements CommandExecutor {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage("Команда только для игроков!");
+public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    if (!(sender instanceof Player player)) {
+        sender.sendMessage("Команда только для игроков!");
+        return true;
+    }
+
+    // --- НОВАЯ ЧАСТЬ ДЛЯ КОМАНДЫ SITONSHIP ---
+    if (command.getName().equalsIgnoreCase("sitonship")) {
+        // Проверяем, существует ли сиденье и не удалено ли оно
+        if (seat == null || seat.isDead()) {
+            player.sendMessage("§cСначала заспавни корабль командой /spawnship!");
             return true;
         }
+        
+        // Сажаем игрока на стойку для брони
+        seat.addPassenger(player);
+        player.sendMessage("§aВы сели на корабль!");
+        return true;
+    }
+    // -----------------------------------------
 
-        // Проверка на наличие 3-х аргументов
+    // --- ТВОЯ СТАРАЯ ЧАСТЬ ДЛЯ SPAWNSHIP ---
+    if (command.getName().equalsIgnoreCase("spawnship")) {
         if (args.length < 3) {
             player.sendMessage("§cИспользование: /spawnship <x> <y> <z>");
             return true;
         }
 
         try {
-            // Считываем целые числа
             int x = Integer.parseInt(args[0]);
             int y = Integer.parseInt(args[1]);
             int z = Integer.parseInt(args[2]);
 
-            // Добавляем 0.5, чтобы корабль был в центре блока, а не на углу
             Location targetLoc = new Location(player.getWorld(), x + 0.5, y + 0.5, z + 0.5);
 
             removeAllShips();
@@ -67,9 +85,12 @@ public final class FrogShip extends JavaPlugin implements CommandExecutor {
         } catch (NumberFormatException e) {
             player.sendMessage("§cОшибка: Координаты должны быть целыми числами!");
         }
-
         return true;
     }
+
+    return false;
+}
+
 
 
 
@@ -79,6 +100,7 @@ public final class FrogShip extends JavaPlugin implements CommandExecutor {
         ship.getPassengers().forEach(Entity::remove);
         // Удаляем "родителя"
         ship.remove();
+        if (seat != null) seat.remove(); // Удаляем сиденье
         activeShips.remove(ship);
         Bukkit.broadcastMessage("§7Корабль уплыл далеко и исчез...");
     }
@@ -125,7 +147,17 @@ private BlockDisplay createPart(Location loc, float offsetX, float offsetZ) {
 }
 
 
-
+// 2. Метод для спавна сиденья (вызывать в конце spawnMovingPlatform)
+private void spawnSeat(BlockDisplay root) {
+    // Создаем невидимую стойку для брони
+    seat = root.getWorld().spawn(root.getLocation().add(0, -0.5, 0), org.bukkit.entity.ArmorStand.class, s -> {
+        s.setVisible(false);
+        s.setGravity(false);
+        s.setSmall(true);
+        s.setMarker(false); 
+        s.getPersistentDataContainer().set(shipKey, PersistentDataType.BYTE, (byte) 1);
+    });
+}
 
 
 
@@ -144,6 +176,8 @@ private BlockDisplay createPart(Location loc, float offsetX, float offsetZ) {
                 root.addPassenger(part);
             }
         }
+
+        spawnSeat(root); // ОБЯЗАТЕЛЬНО вызвать здесь
 
         // 3. Запускаем задачу движения
         new BukkitRunnable() {
@@ -174,6 +208,11 @@ private BlockDisplay createPart(Location loc, float offsetX, float offsetZ) {
 
                 // Телепортируем ТОЛЬКО центральный блок (пассажиры переместятся автоматически)
                 root.teleport(nextLoc);
+
+                if (seat != null && !seat.isDead()) {
+    // Телепортируем сиденье под корень (с небольшим смещением по Y для высоты сидения)
+    seat.teleport(nextLoc.clone().add(0, -0.6, 0));
+}
                 
                 // Обновляем интерполяцию для всех 9 блоков, чтобы движение было плавным
                 updateInterpolation(root);
