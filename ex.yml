@@ -1,6 +1,0 @@
-commands:
-  spawnship:
-    description: Заспавнить корабль.
-    usage: /spawnship <x> <y> <z>
-  sitonship:
-    description: Сесть на корабль.
