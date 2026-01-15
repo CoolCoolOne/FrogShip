@@ -1,31 +1,43 @@
 package AlexTro.frogShip;
 
 import org.bukkit.Location;
+import org.bukkit.util.Vector;
+import java.util.List;
 
 public class ShipPathCalculator {
 
-    private double routeTime = 0;
+    private final List<Vector> points;
+    private int currentPointIndex = 0;
     private double waveTime = 0;
 
-    /**
-     * Вычисляет горизонтальное смещение (маршрут)
-     */
-    public double[] getNextHorizontalOffset() {
-        // Здесь будет твой сложный маршрут (X и Z)
-        double x = Math.sin(routeTime) * 10.0;
-        double z = 0;
-        
-        routeTime += 0.08; // Скорость движения по маршруту
-        return new double[]{x, z};
+    public ShipPathCalculator(List<Vector> points) {
+        this.points = points;
     }
 
-    /**
-     * Вычисляет вертикальное смещение (качка)
-     */
+    public double[] getNextHorizontalOffset(Location currentLoc) {
+        if (points.isEmpty()) return new double[]{0, 0};
+
+        Vector target = points.get(currentPointIndex);
+        // Вектор направления к цели (только X и Z)
+        Vector direction = new Vector(target.getX(), 0, target.getZ())
+                .subtract(new Vector(currentLoc.getX(), 0, currentLoc.getZ()));
+
+        // Проверка: достигли ли мы текущей точки (радиус 0.5 блока)
+        if (direction.lengthSquared() < 0.25) {
+            // Переход к следующей точке, после последней будет снова 0-я
+            currentPointIndex = (currentPointIndex + 1) % points.size();
+        }
+
+        // Двигаем корабль с фиксированной скоростью 0.1
+        Vector move = direction.normalize().multiply(0.1);
+        return new double[]{move.getX(), move.getZ()};
+    }
+
     public double getNextWaveOffset() {
-        double y = Math.sin(waveTime) * 0.125; // 1/8 блока
-        
-        waveTime += 0.04; // Скорость качания
-        return y;
+        if (points.isEmpty()) return 0;
+
+        waveTime += 0.1;
+        // Качка (1/8 блока) + Y целевой точки
+        return points.get(currentPointIndex).getY() + (Math.sin(waveTime) * 0.125);
     }
 }

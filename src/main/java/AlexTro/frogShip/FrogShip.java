@@ -21,6 +21,8 @@ public final class FrogShip extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
+
         shipKey = new NamespacedKey(this, "is_frog_ship");
         
         // Регистрируем команды в отдельном классе
