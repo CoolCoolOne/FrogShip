@@ -12,10 +12,10 @@ public class ShipPathCalculator {
      */
     public double[] getNextHorizontalOffset() {
         // Здесь будет твой сложный маршрут (X и Z)
-        double x = Math.sin(routeTime) * 5.0;
+        double x = Math.sin(routeTime) * 10.0;
         double z = 0;
         
-        routeTime += 0.04; // Скорость движения по маршруту
+        routeTime += 0.08; // Скорость движения по маршруту
         return new double[]{x, z};
     }
 
@@ -25,7 +25,7 @@ public class ShipPathCalculator {
     public double getNextWaveOffset() {
         double y = Math.sin(waveTime) * 0.125; // 1/8 блока
         
-        waveTime += 0.02; // Скорость качания
+        waveTime += 0.04; // Скорость качания
         return y;
     }
 }

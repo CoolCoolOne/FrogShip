@@ -50,7 +50,7 @@ public class ShipCommandExecutor implements CommandExecutor {
                 plugin.cleanAllWorldsFromShips();
 
                 // Вызываем логику спавна из отдельного класса
-                ShipSpawner.spawnMovingPlatform(plugin, targetLoc);
+                ShipSpawner.spawn(plugin, targetLoc);
                 player.sendMessage(String.format("§eКорабль заспавнен на координатах: %d, %d, %d", x, y, z));
 
             } catch (NumberFormatException e) {
