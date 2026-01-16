@@ -2,6 +2,7 @@ name: FrogShip
 version: '1.0-SNAPSHOT'
 main: AlexTro.frogShip.FrogShip
 api-version: '1.21'
+depend: [WorldEdit]
 commands:
   spawnship:
     description: Заспавнить корабль.

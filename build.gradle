@@ -19,7 +19,7 @@ repositories {
 
 dependencies {
     // Библиотека для работы со схематиками (2026 год)
-    compileOnly "com.sk89q.worldedit:worldedit-bukkit:7.3.10"
+    compileOnly files('libs/worldedit-bukkit-7.4.0-rc-01.jar')
     // API вашего сервера
     compileOnly("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
 }

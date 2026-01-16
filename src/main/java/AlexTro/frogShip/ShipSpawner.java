@@ -66,6 +66,7 @@ public class ShipSpawner {
         new ShipMoveTask(plugin, root, route).runTaskTimer(plugin, 0L, 1L);
     }
 
+
     private static void loadSchematicBlocks(FrogShip plugin, BlockDisplay root, Location startLoc) {
         File file = new File(plugin.getDataFolder(), "ship.schem");
         if (!file.exists()) {
@@ -79,39 +80,46 @@ public class ShipSpawner {
             BlockVector3 max = clipboard.getMaximumPoint();
             BlockVector3 origin = clipboard.getOrigin();
 
-            for (int x = min.getX(); x <= max.getX(); x++) {
-                for (int y = min.getY(); y <= max.getY(); y++) {
-                    for (int z = min.getZ(); z <= max.getZ(); z++) {
-                        
+            // Используем .x(), .y(), .z() для получения int без предупреждений о Deprecated
+            for (int x = min.x(); x <= max.x(); x++) {
+                for (int y = min.y(); y <= max.y(); y++) {
+                    for (int z = min.z(); z <= max.z(); z++) {
+
                         BlockVector3 pos = BlockVector3.at(x, y, z);
                         BaseBlock block = clipboard.getFullBlock(pos);
 
                         if (block.getBlockType().getMaterial().isAir()) continue;
 
-                        // Превращаем блок WorldEdit в Bukkit BlockData
-                        BlockData data = Bukkit.createBlockData(block.getAsString());
-                        
-                        // Вычисляем смещение относительно точки Origin
-                        float offX = x - origin.getX();
-                        float offY = y - origin.getY();
-                        float offZ = z - origin.getZ();
+                        // Создаем BlockData из строки блока WorldEdit
+                        BlockData data;
+                        try {
+                            data = Bukkit.createBlockData(block.getAsString());
+                        } catch (IllegalArgumentException e) {
+                            // Если Bukkit не понял строку, берем дефолтный тип блока
+                            data = Bukkit.createBlockData(Material.matchMaterial(block.getBlockType().getId()));
+                        }
 
-                        // Создаем BlockDisplay для каждой части
+                        // Вычисляем смещение относительно точки Origin
+                        float offX = (float) (x - origin.x());
+                        float offY = (float) (y - origin.y());
+                        float offZ = (float) (z - origin.z());
+
+                        // Спавним BlockDisplay для части корабля
                         BlockDisplay part = (BlockDisplay) startLoc.getWorld().spawnEntity(startLoc, EntityType.BLOCK_DISPLAY);
                         part.setBlock(data);
                         part.getPersistentDataContainer().set(plugin.getShipKey(), PersistentDataType.BYTE, (byte) 1);
 
-                        // Настройка позиции (трансформации)
+                        // Настройка трансформации (смещение)
                         Transformation t = part.getTransformation();
                         t.getTranslation().set(offX, offY, offZ);
                         part.setTransformation(t);
 
-                        // ПРОВЕРКА СВЕТА: Если блок светится сам по себе, заставляем сущность светиться
-                        if (data.getMaterial().getEmissionLightLevel() > 0) {
+                        // ПРОВЕРКА СВЕТА: если блок светящийся, заставляем сущность сиять
+                        if (data.getLightEmission() > 0) {
                             part.setBrightness(new org.bukkit.entity.Display.Brightness(15, 15));
                         }
 
-                        // Привязываем к корню
+                        // Прикрепляем часть к корневому объекту через систему пассажиров
                         root.addPassenger(part);
                     }
                 }
