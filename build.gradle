@@ -12,9 +12,15 @@ repositories {
         name = "papermc-repo"
         url = "https://repo.papermc.io/repository/maven-public/"
     }
+    maven {
+        url = "https://maven.enginehub.org"
+    }
 }
 
 dependencies {
+    // Библиотека для работы со схематиками (2026 год)
+    compileOnly "com.sk89q.worldedit:worldedit-bukkit:7.3.10"
+    // API вашего сервера
     compileOnly("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
 }
 
