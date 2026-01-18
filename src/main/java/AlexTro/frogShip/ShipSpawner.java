@@ -132,9 +132,15 @@ public class ShipSpawner {
                         }
 
                         // ПРОВЕРКА СВЕТА: если блок светящийся, заставляем сущность сиять
-                        if (data.getLightEmission() > 0) {
+                        // 1. Проверяем, является ли это специальным блоком LIGHT (с уровнями)
+                        if (data instanceof org.bukkit.block.data.type.Light light) {
+                            int level = light.getLevel();
+                            part.setBrightness(new org.bukkit.entity.Display.Brightness(level, level));
+                        }
+                        else if (data.getLightEmission() > 0) {
                             part.setBrightness(new org.bukkit.entity.Display.Brightness(15, 15));
                         }
+
 
                         // Прикрепляем часть к корневому объекту через систему пассажиров
                         root.addPassenger(part);

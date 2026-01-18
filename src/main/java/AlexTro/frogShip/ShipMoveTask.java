@@ -64,6 +64,8 @@ public class ShipMoveTask extends BukkitRunnable {
         for (Entity p : root.getPassengers()) {
             if (!(p instanceof BlockDisplay bd)) continue;
 
+            ShipEffectHandler.playEffects(bd, plugin);
+
             bd.setInterpolationDuration(1);
             bd.setInterpolationDelay(0);
 
