@@ -17,6 +17,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
+import org.bukkit.NamespacedKey;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -68,9 +69,9 @@ public class ShipSpawner {
 
 
     private static void loadSchematicBlocks(FrogShip plugin, BlockDisplay root, Location startLoc) {
-        File file = new File(plugin.getDataFolder(), "ship.schem");
+        File file = new File(plugin.getDataFolder(), "shipbig2.schem");
         if (!file.exists()) {
-            Bukkit.getLogger().warning("[FrogShip] Файл ship.schem не найден в папке плагина!");
+            Bukkit.getLogger().warning("[FrogShip] Файл shipbig2.schem не найден в папке плагина!");
             return;
         }
 
@@ -113,6 +114,22 @@ public class ShipSpawner {
                         Transformation t = part.getTransformation();
                         t.getTranslation().set(offX, offY, offZ);
                         part.setTransformation(t);
+
+                        NamespacedKey typeKey = new NamespacedKey(plugin, "wheel_type");
+                        NamespacedKey offXKey = new NamespacedKey(plugin, "offset_x");
+                        NamespacedKey offYKey = new NamespacedKey(plugin, "offset_y");
+                        NamespacedKey offZKey = new NamespacedKey(plugin, "offset_z");
+
+                        // Сохраняем базовые координаты (необходимы для логики ShipMoveTask)
+                        part.getPersistentDataContainer().set(offXKey, PersistentDataType.FLOAT, offX);
+                        part.getPersistentDataContainer().set(offYKey, PersistentDataType.FLOAT, offY);
+                        part.getPersistentDataContainer().set(offZKey, PersistentDataType.FLOAT, offZ);
+
+                        // Помечаем блоки как лопасти колеса по материалам
+                        Material mat = data.getMaterial();
+                        if (mat == Material.SMOOTH_RED_SANDSTONE || mat == Material.RED_CONCRETE || mat == Material.IRON_BLOCK) {
+                            part.getPersistentDataContainer().set(typeKey, PersistentDataType.STRING, "blade");
+                        }
 
                         // ПРОВЕРКА СВЕТА: если блок светящийся, заставляем сущность сиять
                         if (data.getLightEmission() > 0) {
