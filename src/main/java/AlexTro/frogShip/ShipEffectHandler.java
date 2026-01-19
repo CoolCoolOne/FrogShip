@@ -36,4 +36,33 @@ public class ShipEffectHandler {
         }
     }
 
+    // Добавьте этот метод в класс ShipEffectHandler
+public static void playSeatEffects(org.bukkit.entity.ArmorStand seat, FrogShip plugin) {
+    // Проверяем, что это бамбуковое сиденье и на нем кто-то есть
+    if (seat.getScoreboardTags().contains("ship_seat_mob") && !seat.getPassengers().isEmpty()) {
+        org.bukkit.entity.Entity passenger = seat.getPassengers().get(0);
+
+        if (passenger instanceof org.bukkit.entity.Frog frog) {
+            // Шанс 0.5% (примерно раз в 10 секунд)
+            if (java.util.concurrent.ThreadLocalRandom.current().nextDouble() < 0.005) {
+                // Издаем звук кваканья
+                frog.getWorld().playSound(
+                    frog.getLocation(), 
+                    org.bukkit.Sound.ENTITY_FROG_AMBIENT, 
+                    1.0f, 
+                    (float) (0.8 + Math.random() * 0.4) // Случайная тональность
+                );
+                
+                // Бонус: пускаем немного пузырьков или частиц сердца, когда она квакает
+                frog.getWorld().spawnParticle(
+                    org.bukkit.Particle.VILLAGER_HAPPY, 
+                    frog.getLocation().add(0, 0.5, 0), 
+                    3, 0.2, 0.2, 0.2, 0.05
+                );
+            }
+        }
+    }
+}
+
+
 }

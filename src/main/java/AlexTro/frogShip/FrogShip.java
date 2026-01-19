@@ -17,7 +17,6 @@ public final class FrogShip extends JavaPlugin {
     // Эти переменные остаются здесь, так как корабль всегда один
     private final List<BlockDisplay> activeShips = new ArrayList<>();
     private NamespacedKey shipKey;
-    private ArmorStand seat;
 
     @Override
     public void onEnable() {
@@ -29,6 +28,11 @@ public final class FrogShip extends JavaPlugin {
         ShipCommandExecutor executor = new ShipCommandExecutor(this);
         getCommand("spawnship").setExecutor(executor);
         getCommand("sitonship").setExecutor(executor);
+        getCommand("sitoff").setExecutor(executor); // Регистрируем sitoff
+        
+        // РЕГИСТРИРУЕМ СОБЫТИЯ (Shift-логика)
+        getServer().getPluginManager().registerEvents(new ShipEvents(this), this);
+        
         
         cleanAllWorldsFromShips();
     }
@@ -48,6 +52,11 @@ public final class FrogShip extends JavaPlugin {
                     entity.remove();
                 }
             }
+             for (Entity entity : world.getEntitiesByClass(ArmorStand.class)) {
+                if (entity.getScoreboardTags().contains("ship_seat")) {
+                    entity.remove();
+                }
+            }
         });
     }
 
@@ -58,13 +67,13 @@ public final class FrogShip extends JavaPlugin {
                 ship.remove();
             }
         }
-        if (seat != null) seat.remove(); // Удаляем сиденье
+        Bukkit.getWorlds().forEach(w -> w.getEntitiesByClass(ArmorStand.class).stream()
+            .filter(as -> as.getScoreboardTags().contains("ship_seat"))
+            .forEach(Entity::remove));
         activeShips.clear();
     }
 
     // Геттеры для доступа из других классов
     public NamespacedKey getShipKey() { return shipKey; }
     public List<BlockDisplay> getActiveShips() { return activeShips; }
-    public ArmorStand getSeat() { return seat; }
-    public void setSeat(ArmorStand seat) { this.seat = seat; }
 }
