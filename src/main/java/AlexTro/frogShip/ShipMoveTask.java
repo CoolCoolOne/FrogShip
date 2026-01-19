@@ -34,8 +34,17 @@ public class ShipMoveTask extends BukkitRunnable {
         double[] xz = pathCalculator.getNextHorizontalOffset(currentLoc);
         double y = pathCalculator.getNextWaveOffset();
 
-        Location nextLoc = new Location(currentLoc.getWorld(), currentLoc.getX() + xz[0], y, currentLoc.getZ() + xz[1]);
-        // В 2026 году можно добавить вычисление поворота по xz, если нужно, чтобы корабль плавно поворачивал носом
+        float targetYaw = calculateTargetYaw(xz[0], xz[1]);
+
+Location nextLoc = new Location(
+        currentLoc.getWorld(),
+        currentLoc.getX() + xz[0],
+        y,
+        currentLoc.getZ() + xz[1],
+        targetYaw, // Устанавливаем поворот
+        0
+);
+
         
         root.teleport(nextLoc);
 
@@ -57,4 +66,18 @@ public class ShipMoveTask extends BukkitRunnable {
         plugin.removeAllShips();
         this.cancel();
     }
+
+    /**
+ * Рассчитывает направление носа корабля на основе вектора движения и данных из конфига.
+ */
+private float calculateTargetYaw(double xOffset, double zOffset) {
+    // Математика вычисления угла на плоскости XZ
+    float movementYaw = (float) Math.toDegrees(Math.atan2(-xOffset, zOffset));
+    
+    // Считываем коррекцию из конфига
+    float configOffset = (float) plugin.getConfig().getDouble("ship-yaw-offset", 0.0);
+    
+    return movementYaw + configOffset;
+}
+
 }

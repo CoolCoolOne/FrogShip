@@ -10,8 +10,7 @@ import org.bukkit.persistence.PersistentDataType;
 public class ShipPartUpdater {
 
     public static void updateSeats(FrogShip plugin, Location nextLoc, NamespacedKey oxKey, NamespacedKey oyKey, NamespacedKey ozKey) {
-        NamespacedKey yawKey = new NamespacedKey(plugin, "seat_yaw");
-        
+        // Теперь этот метод только ищет сиденья в мире
         nextLoc.getWorld().getEntitiesByClass(ArmorStand.class).stream()
             .filter(as -> as.getScoreboardTags().contains("ship_seat"))
             .forEach(as -> {
@@ -20,15 +19,30 @@ public class ShipPartUpdater {
                 Double oz = as.getPersistentDataContainer().get(ozKey, PersistentDataType.DOUBLE);
                 
                 if (ox != null && oy != null && oz != null) {
-                    Location seatLoc = nextLoc.clone().add(ox, oy, oz);
-                    Float savedYaw = as.getPersistentDataContainer().get(yawKey, PersistentDataType.FLOAT);
-                    float finalYaw = nextLoc.getYaw() + (savedYaw != null ? savedYaw : 0);
-                    
-                    seatLoc.setYaw(finalYaw);
-                    as.teleport(seatLoc);
-                    ShipEffectHandler.playSeatEffects(as, plugin);
+                    // Вызываем новый метод для обработки конкретного стенда
+                    syncSeatRotation(as, nextLoc, ox, oy, oz, plugin);
                 }
             });
+    }
+
+    /**
+     * Новый метод: отвечает только за математику поворота и телепортацию одного сиденья
+     */
+    private static void syncSeatRotation(ArmorStand as, Location shipLoc, double ox, double oy, double oz, FrogShip plugin) {
+        Location seatLoc = shipLoc.clone().add(ox, oy, oz);
+        
+        // Получаем сохраненный при спавне случайный угол
+        NamespacedKey yawKey = new NamespacedKey(plugin, "seat_yaw");
+        Float savedYaw = as.getPersistentDataContainer().get(yawKey, PersistentDataType.FLOAT);
+        
+        // Итоговый Yaw = Поворот корабля + личный разворот сиденья
+        float finalYaw = shipLoc.getYaw() + (savedYaw != null ? savedYaw : 0);
+        
+        seatLoc.setYaw(finalYaw);
+        as.teleport(seatLoc);
+        
+        // Эффекты (кваканье лягушек)
+        ShipEffectHandler.playSeatEffects(as, plugin);
     }
 
     public static void updateVisualParts(FrogShip plugin, BlockDisplay root, float wheelAngle) {
