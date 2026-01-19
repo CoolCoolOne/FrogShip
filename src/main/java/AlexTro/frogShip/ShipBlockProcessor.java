@@ -96,6 +96,7 @@ seat.getPersistentDataContainer().set(yawKey, PersistentDataType.FLOAT, randomYa
     t.getScale().set(0, 0, 0); 
     part.setTransformation(t);
 
+        part.getPersistentDataContainer().set(new NamespacedKey(plugin, "is_growing"), PersistentDataType.BYTE, (byte) 1);
     // Настройка интерполяции (плавности)
     part.setInterpolationDuration(40); // 2 секунды на рост
     part.setInterpolationDelay(0);
@@ -107,6 +108,10 @@ seat.getPersistentDataContainer().set(yawKey, PersistentDataType.FLOAT, randomYa
         Transformation tFinal = part.getTransformation();
         tFinal.getScale().set(1, 1, 1); // Масштаб 100%
         part.setTransformation(tFinal);
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            part.getPersistentDataContainer().remove(new NamespacedKey(plugin, "is_growing"));
+        }, 40L);
     }, 5L); // Задержка 0.25 сек перед началом анимации
 }
 

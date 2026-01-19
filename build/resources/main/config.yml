@@ -1,3 +1,5 @@
+ship-start-delay: 30
+ship-yaw-offset: 0.0
 ship-route:
   - {x: 300410, y: 64, z: 42223}
   - {x: 300511, y: 64, z: 42224}

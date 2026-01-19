@@ -54,11 +54,11 @@ public static void playSeatEffects(org.bukkit.entity.ArmorStand seat, FrogShip p
                 );
                 
                 // Бонус: пускаем немного пузырьков или частиц сердца, когда она квакает
-                frog.getWorld().spawnParticle(
-                    org.bukkit.Particle.VILLAGER_HAPPY, 
-                    frog.getLocation().add(0, 0.5, 0), 
-                    3, 0.2, 0.2, 0.2, 0.05
-                );
+//                frog.getWorld().spawnParticle(
+//                    org.bukkit.Particle.VILLAGER_HAPPY,
+//                    frog.getLocation().add(0, 0.5, 0),
+//                    3, 0.2, 0.2, 0.2, 0.05
+//                );
             }
         }
     }
