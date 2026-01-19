@@ -33,6 +33,8 @@ public class ShipBlockProcessor {
         part.setBlock(data);
         part.getPersistentDataContainer().set(plugin.getShipKey(), PersistentDataType.BYTE, (byte) 1);
 
+        animateAppearance(plugin, part, offX, offY, offZ);
+
         // Настройка позиции
         Transformation t = part.getTransformation();
         t.getTranslation().set(offX, offY, offZ);
@@ -40,6 +42,9 @@ public class ShipBlockProcessor {
 
         // Сохранение метаданных
         saveMetadata(plugin, part, offX, offY, offZ, mat, data);
+
+
+
 
         root.addPassenger(part);
     }
@@ -82,4 +87,27 @@ seat.getPersistentDataContainer().set(yawKey, PersistentDataType.FLOAT, randomYa
             part.setBrightness(new org.bukkit.entity.Display.Brightness(15, 15));
         }
     }
+
+    private static void animateAppearance(FrogShip plugin, BlockDisplay part, float offX, float offY, float offZ) {
+    Transformation t = part.getTransformation();
+    // Устанавливаем позицию
+    t.getTranslation().set(offX, offY, offZ);
+    // Устанавливаем начальный масштаб в 0 (невидимый)
+    t.getScale().set(0, 0, 0); 
+    part.setTransformation(t);
+
+    // Настройка интерполяции (плавности)
+    part.setInterpolationDuration(40); // 2 секунды на рост
+    part.setInterpolationDelay(0);
+
+    // Запускаем задачу по увеличению
+    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        if (!part.isValid()) return; // Проверка, не удалили ли корабль пока он рос
+        
+        Transformation tFinal = part.getTransformation();
+        tFinal.getScale().set(1, 1, 1); // Масштаб 100%
+        part.setTransformation(tFinal);
+    }, 5L); // Задержка 0.25 сек перед началом анимации
+}
+
 }

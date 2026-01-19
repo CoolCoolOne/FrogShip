@@ -20,22 +20,42 @@ import java.util.Map;
 
 public class ShipSpawner {
 
-    public static void spawn(FrogShip plugin, Location startLoc) {
-        List<Vector> route = new ArrayList<>();
-        List<Map<?, ?>> configRoute = plugin.getConfig().getMapList("ship-route");
-        for (Map<?, ?> map : configRoute) {
-            route.add(new Vector(((Number) map.get("x")).doubleValue(), ((Number) map.get("y")).doubleValue(), ((Number) map.get("z")).doubleValue()));
-        }
-        if (route.isEmpty()) route.add(startLoc.toVector());
-
-        BlockDisplay root = (BlockDisplay) startLoc.getWorld().spawnEntity(startLoc, EntityType.BLOCK_DISPLAY);
-        root.getPersistentDataContainer().set(plugin.getShipKey(), PersistentDataType.BYTE, (byte) 1);
-        plugin.getActiveShips().add(root);
-
-        loadSchematicBlocks(plugin, root, startLoc);
-
-        new ShipMoveTask(plugin, root, route).runTaskTimer(plugin, 0L, 1L);
+public static void spawn(FrogShip plugin, Location startLoc) {
+    // 1. Загружаем маршрут
+    List<Vector> route = new ArrayList<>();
+    List<Map<?, ?>> configRoute = plugin.getConfig().getMapList("ship-route");
+    for (Map<?, ?> map : configRoute) {
+        route.add(new Vector(((Number) map.get("x")).doubleValue(), 
+                             ((Number) map.get("y")).doubleValue(), 
+                             ((Number) map.get("z")).doubleValue()));
     }
+    if (route.isEmpty()) route.add(startLoc.toVector());
+
+    // 2. Создаем корень корабля
+    BlockDisplay root = (BlockDisplay) startLoc.getWorld().spawnEntity(startLoc, EntityType.BLOCK_DISPLAY);
+    root.getPersistentDataContainer().set(plugin.getShipKey(), PersistentDataType.BYTE, (byte) 1);
+    plugin.getActiveShips().add(root);
+
+    // 3. Загружаем блоки (здесь сработает ваша плавная анимация появления)
+    loadSchematicBlocks(plugin, root, startLoc);
+
+    // 4. Логика задержки отплытия из конфига
+    int delaySeconds = plugin.getConfig().getInt("ship-start-delay", 30);
+
+    Bukkit.broadcastMessage(String.format("§6[FrogShip] §eКорабль прибыл в порт! Отправление через %d сек. посадка /sitonship", delaySeconds));
+
+    // 5. Запускаем таймер ожидания
+    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        // Проверяем, что корабль всё еще существует (его не удалили командой /rmship)
+        if (root.isValid() && !root.isDead()) {
+            Bukkit.broadcastMessage("§6[FrogShip] §aВсе по местам! Корабль отправляется в путь.");
+            
+            // ЗАПУСК ДВИЖЕНИЯ
+            new ShipMoveTask(plugin, root, route).runTaskTimer(plugin, 0L, 1L);
+        }
+    }, 20L * delaySeconds); 
+}
+
 
     private static void loadSchematicBlocks(FrogShip plugin, BlockDisplay root, Location startLoc) {
         File file = new File(plugin.getDataFolder(), "shipbig2.schem");

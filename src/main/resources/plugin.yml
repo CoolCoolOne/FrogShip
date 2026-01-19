@@ -13,3 +13,5 @@ commands:
     description: "Слезть с корабля"
   spawnfrogs:
     description: "Заспавнить лягушек на бамбуковые сиденья"
+  rmship:
+    description: "Удалить текущий корабль"

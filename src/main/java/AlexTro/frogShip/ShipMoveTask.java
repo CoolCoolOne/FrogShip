@@ -53,6 +53,7 @@ public class ShipMoveTask extends BukkitRunnable {
     }
 
     private void stop() {
+        Bukkit.broadcastMessage("§6[FrogShip] §eКорабль уплыл слишком далеко и вернулся в док.");
         plugin.removeAllShips();
         this.cancel();
     }

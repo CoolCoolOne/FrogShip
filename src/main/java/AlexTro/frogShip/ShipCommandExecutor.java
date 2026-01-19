@@ -28,6 +28,17 @@ public class ShipCommandExecutor implements CommandExecutor {
             return true;
         }
 
+        // --- Новая команда: /rmship ---
+    if (command.getName().equalsIgnoreCase("rmship")) {
+        if (plugin.getActiveShips().isEmpty()) {
+            player.sendMessage("§cКорабля сейчас нет в мире!");
+            return true;
+        }
+        plugin.removeAllShips();
+        Bukkit.broadcastMessage("§6[FrogShip] §eКорабль был отозван командой /rmship.");
+        return true;
+    }
+
         // Логика посадки на случайное мангровое сиденье
         if (command.getName().equalsIgnoreCase("sitonship")) {
             List<ArmorStand> playerSeats = player.getWorld().getEntitiesByClass(ArmorStand.class).stream()
@@ -58,6 +69,10 @@ public class ShipCommandExecutor implements CommandExecutor {
         }
 
         if (command.getName().equalsIgnoreCase("spawnship")) {
+            if (!plugin.getActiveShips().isEmpty()) {
+            player.sendMessage("§cКорабль уже заспавнен! Сначала удалите его командой /rmship.");
+            return true;
+        }
             if (args.length < 3) {
                 player.sendMessage("§cИспользование: /spawnship <x> <y> <z>");
                 return true;
@@ -74,7 +89,7 @@ public class ShipCommandExecutor implements CommandExecutor {
                 plugin.cleanAllWorldsFromShips();
 
                 ShipSpawner.spawn(plugin, targetLoc);
-                player.sendMessage(String.format("§eКорабль заспавнен на координатах: %d, %d, %d", x, y, z));
+                player.sendMessage(String.format("§eКорабль появился на координатах: %d, %d, %d", x, y, z));
 
             } catch (NumberFormatException e) {
                 player.sendMessage("§cОшибка: Координаты должны быть целыми числами!");
