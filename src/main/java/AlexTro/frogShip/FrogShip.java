@@ -36,6 +36,15 @@ public final class FrogShip extends JavaPlugin {
         
         
         cleanAllWorldsFromShips();
+
+        Bukkit.getConsoleSender().sendMessage("§a");
+    Bukkit.getConsoleSender().sendMessage("§a  ////////////////////////////////////////");
+    Bukkit.getConsoleSender().sendMessage("§a  //                                    //");
+    Bukkit.getConsoleSender().sendMessage("§a  //    §2FROG SHIP §aPlugin v0.1       //");
+    Bukkit.getConsoleSender().sendMessage("§a  //    §fСтатус: §2ЗАПУЩЕН §a          //");
+    Bukkit.getConsoleSender().sendMessage("§a  //                                    //");
+    Bukkit.getConsoleSender().sendMessage("§a  ////////////////////////////////////////");
+    Bukkit.getConsoleSender().sendMessage("§a");
     }
 
     @Override
