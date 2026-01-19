@@ -15,6 +15,7 @@ public class ShipMoveTask extends BukkitRunnable {
     private final ShipPathCalculator pathCalculator;
     private final double maxDistanceSq = Math.pow(64, 2);
     private float wheelAngle = 0f;
+    private float smoothYaw = -1f;
 
     private final NamespacedKey oxKey, oyKey, ozKey;
 
@@ -36,14 +37,22 @@ public class ShipMoveTask extends BukkitRunnable {
         double y = pathCalculator.getNextWaveOffset();
 
         float targetYaw = calculateTargetYaw(xz[0], xz[1]);
+        if (smoothYaw == -1f) smoothYaw = targetYaw;
 
-Location nextLoc = new Location(
-        currentLoc.getWorld(),
-        currentLoc.getX() + xz[0],
-        y,
-        currentLoc.getZ() + xz[1],
-        targetYaw, // Устанавливаем поворот
-        0
+// Сглаживаем поворот (0.1f - скорость поворота, можно уменьшить для плавности)
+        float diff = targetYaw - smoothYaw;
+        while (diff < -180) diff += 360;
+        while (diff > 180) diff -= 360;
+        smoothYaw += diff * 0.15f;
+
+        Location nextLoc = new Location(
+                currentLoc.getWorld(),
+                currentLoc.getX() + xz[0],
+                y,
+                currentLoc.getZ() + xz[1],
+                smoothYaw, // Используем только сглаженный угол
+                0          // Pitch (наклон) оставляем 0
+
 );
 
         

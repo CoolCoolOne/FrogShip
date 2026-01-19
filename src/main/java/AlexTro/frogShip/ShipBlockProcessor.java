@@ -43,9 +43,6 @@ public class ShipBlockProcessor {
         // Сохранение метаданных
         saveMetadata(plugin, part, offX, offY, offZ, mat, data);
 
-
-
-
         root.addPassenger(part);
     }
 
@@ -89,30 +86,14 @@ seat.getPersistentDataContainer().set(yawKey, PersistentDataType.FLOAT, randomYa
     }
 
     private static void animateAppearance(FrogShip plugin, BlockDisplay part, float offX, float offY, float offZ) {
-    Transformation t = part.getTransformation();
-    // Устанавливаем позицию
-    t.getTranslation().set(offX, offY, offZ);
-    // Устанавливаем начальный масштаб в 0 (невидимый)
-    t.getScale().set(0, 0, 0); 
-    part.setTransformation(t);
+        Transformation t = part.getTransformation();
+        // Сразу ставим финальные значения
+        t.getTranslation().set(offX, offY, offZ);
+        t.getScale().set(1, 1, 1);
+        part.setTransformation(t);
 
-        part.getPersistentDataContainer().set(new NamespacedKey(plugin, "is_growing"), PersistentDataType.BYTE, (byte) 1);
-    // Настройка интерполяции (плавности)
-    part.setInterpolationDuration(40); // 2 секунды на рост
-    part.setInterpolationDelay(0);
-
-    // Запускаем задачу по увеличению
-    Bukkit.getScheduler().runTaskLater(plugin, () -> {
-        if (!part.isValid()) return; // Проверка, не удалили ли корабль пока он рос
-        
-        Transformation tFinal = part.getTransformation();
-        tFinal.getScale().set(1, 1, 1); // Масштаб 100%
-        part.setTransformation(tFinal);
-
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            part.getPersistentDataContainer().remove(new NamespacedKey(plugin, "is_growing"));
-        }, 40L);
-    }, 5L); // Задержка 0.25 сек перед началом анимации
-}
+        // Убираем все задержки (runTaskLater) и Duration
+        part.setInterpolationDuration(0);
+    }
 
 }
