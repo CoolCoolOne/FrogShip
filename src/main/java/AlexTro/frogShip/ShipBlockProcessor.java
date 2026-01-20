@@ -47,7 +47,13 @@ public class ShipBlockProcessor {
     }
 
     private static void spawnSeat(FrogShip plugin, Location loc, float offX, float offY, float offZ, Material mat) {
-        Location seatLoc = loc.clone().add(offX, offY - 0.5, offZ);
+        double addY = plugin.getConfig().getDouble("ship.seat-offset-y", 1.5);
+        double centerX = plugin.getConfig().getDouble("ship.seat-center-xz", 0.5);
+        double centerZ = plugin.getConfig().getDouble("ship.seat-center-xz", 0.5);
+
+        // Применяем смещение к локации спавна сиденья
+        // BlockDisplay спавнится от угла блока, поэтому мы добавляем 0.5 для центровки
+        Location seatLoc = loc.clone().add(offX + centerX, offY + addY, offZ + centerZ);
         ArmorStand seat = (ArmorStand) loc.getWorld().spawnEntity(seatLoc, EntityType.ARMOR_STAND);
         float randomYaw = (float) (Math.random() * 360.0);
         
@@ -63,9 +69,9 @@ public class ShipBlockProcessor {
         NamespacedKey oy = new NamespacedKey(plugin, "seat_off_y");
         NamespacedKey oz = new NamespacedKey(plugin, "seat_off_z");
 
-        seat.getPersistentDataContainer().set(ox, PersistentDataType.DOUBLE, (double) offX);
-        seat.getPersistentDataContainer().set(oy, PersistentDataType.DOUBLE, (double) offY - 0.5);
-        seat.getPersistentDataContainer().set(oz, PersistentDataType.DOUBLE, (double) offZ);
+        seat.getPersistentDataContainer().set(ox, PersistentDataType.DOUBLE, (double) offX + centerX);
+        seat.getPersistentDataContainer().set(oy, PersistentDataType.DOUBLE, (double) offY + addY);
+        seat.getPersistentDataContainer().set(oz, PersistentDataType.DOUBLE, (double) offZ + centerZ);
 
         NamespacedKey yawKey = new NamespacedKey(plugin, "seat_yaw");
 seat.getPersistentDataContainer().set(yawKey, PersistentDataType.FLOAT, randomYaw);

@@ -61,6 +61,7 @@ public class ShipCommandExecutor implements CommandExecutor {
         // Логика принудительного выхода
         if (command.getName().equalsIgnoreCase("sitoff")) {
             if (player.getVehicle() instanceof ArmorStand as && as.getScoreboardTags().contains("ship_seat")) {
+                player.addScoreboardTag("is_leaving_ship"); 
                 player.leaveVehicle();
                 player.sendMessage("§eВы сошли с корабля.");
             } else {
@@ -98,31 +99,56 @@ public class ShipCommandExecutor implements CommandExecutor {
             return true;
         }
 
-        if (command.getName().equalsIgnoreCase("spawnfrogs")) {
-    // Ищем все бамбуковые сиденья
-    List<ArmorStand> mobSeats = player.getWorld().getEntitiesByClass(ArmorStand.class).stream()
-            .filter(as -> as.getScoreboardTags().contains("ship_seat_mob")) // Тот самый тег из ShipBlockProcessor
-            .filter(as -> as.getPassengers().isEmpty()) // Только свободные
+if (command.getName().equalsIgnoreCase("spawnfrogs")) {
+    player.sendMessage("§7[Debug] Поиск бамбуковых сидений в текущем мире...");
+
+    // Получаем вообще все ArmorStand в мире для сравнения
+    List<ArmorStand> allArmorStands = player.getWorld().getEntitiesByClass(ArmorStand.class).stream().toList();
+    player.sendMessage("§7[Debug] Всего ArmorStand в мире: " + allArmorStands.size());
+
+    // Фильтруем по тегу ship_seat_mob
+    List<ArmorStand> mobSeats = allArmorStands.stream()
+            .filter(as -> {
+                boolean hasTag = as.getScoreboardTags().contains("ship_seat_mob");
+                return hasTag;
+            })
+            .toList();
+    
+    player.sendMessage("§7[Debug] Найдено сидений с тегом 'ship_seat_mob': " + mobSeats.size());
+
+    // Фильтруем только пустые
+    List<ArmorStand> emptyMobSeats = mobSeats.stream()
+            .filter(as -> as.getPassengers().isEmpty())
             .toList();
 
-    if (mobSeats.isEmpty()) {
-        player.sendMessage("§cНет свободных бамбуковых мест для лягушек!");
+    player.sendMessage("§7[Debug] Из них свободно (без пассажиров): " + emptyMobSeats.size());
+
+    if (emptyMobSeats.isEmpty()) {
+        player.sendMessage("§c[!] Нет свободных бамбуковых мест для спавна лягушек.");
         return true;
     }
 
-    for (ArmorStand seat : mobSeats) {
-        // Спавним лягушку
-        player.getWorld().spawn(seat.getLocation(), org.bukkit.entity.Frog.class, frog -> {
-            seat.addPassenger(frog);
-            frog.setInvulnerable(true); // Чтобы лягушки не погибли
-            // Можно даже сделать их случайного цвета
-            org.bukkit.entity.Frog.Variant[] variants = org.bukkit.entity.Frog.Variant.values();
-            frog.setVariant(variants[new Random().nextInt(variants.length)]);
-        });
+    int spawnedCount = 0;
+    for (ArmorStand seat : emptyMobSeats) {
+        try {
+            player.getWorld().spawn(seat.getLocation(), org.bukkit.entity.Frog.class, frog -> {
+                boolean success = seat.addPassenger(frog);
+                frog.setInvulnerable(true);
+                org.bukkit.entity.Frog.Variant[] variants = org.bukkit.entity.Frog.Variant.values();
+                frog.setVariant(variants[new Random().nextInt(variants.length)]);
+                
+                if (!success) {
+                    player.sendMessage("§e[Debug] Не удалось посадить лягушку на сиденье в " + seat.getLocation().toVector());
+                }
+            });
+            spawnedCount++;
+        } catch (Exception e) {
+            player.sendMessage("§c[Debug] Ошибка при спавне лягушки: " + e.getMessage());
+        }
     }
-    player.sendMessage("§aЛягушки-матросы заняли свои бамбуковые места!");
+
+    player.sendMessage("§a[Готово] Заспавнено лягушек: " + spawnedCount);
     return true;
 }
-        return false;
-    }
+
 }

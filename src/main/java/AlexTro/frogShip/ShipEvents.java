@@ -25,6 +25,11 @@ public class ShipEvents implements Listener {
     public void onShift(EntityDismountEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
 
+        if (player.getScoreboardTags().contains("is_leaving_ship")) {
+            player.removeScoreboardTag("is_leaving_ship"); // Удаляем тег сразу же
+            return; // Позволяем ему выйти из транспорта
+        }
+
         // 1. Если игрок уже в процессе пересадки — игнорируем событие
         if (processingPlayers.contains(player.getUniqueId())) return;
 

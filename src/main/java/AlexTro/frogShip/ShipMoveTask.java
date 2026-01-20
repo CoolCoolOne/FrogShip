@@ -39,11 +39,12 @@ public class ShipMoveTask extends BukkitRunnable {
         float targetYaw = calculateTargetYaw(xz[0], xz[1]);
         if (smoothYaw == -1f) smoothYaw = targetYaw;
 
+float rotSpeed = (float) plugin.getConfig().getDouble("ship.rotation-speed", 0.05f);
 // Сглаживаем поворот (0.1f - скорость поворота, можно уменьшить для плавности)
         float diff = targetYaw - smoothYaw;
         while (diff < -180) diff += 360;
         while (diff > 180) diff -= 360;
-        smoothYaw += diff * 0.15f;
+        smoothYaw += diff * rotSpeed;
 
         Location nextLoc = new Location(
                 currentLoc.getWorld(),
