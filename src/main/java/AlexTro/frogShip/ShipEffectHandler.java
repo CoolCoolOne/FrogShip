@@ -46,7 +46,7 @@ public class ShipEffectHandler {
 
         // Брызги воды (BARRIER используется как технический блок под килем)
         if (mat == Material.BARRIER) {
-            realLoc.getWorld().spawnParticle(Particle.WATER_SPLASH, realLoc, 3, 0.1, 0.1, 0.1, 0.05);
+            realLoc.getWorld().spawnParticle(Particle.BUBBLE_COLUMN_UP, realLoc, 2, 0.1, 0.1, 0.1, 0.02);
             // Добавляем немного светящихся частиц к воде
             realLoc.getWorld().spawnParticle(Particle.GLOW, realLoc, 1, 0.2, 0.2, 0.2, 0.02);
         }

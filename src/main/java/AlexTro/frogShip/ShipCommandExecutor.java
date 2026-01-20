@@ -149,6 +149,8 @@ if (command.getName().equalsIgnoreCase("spawnfrogs")) {
 
     player.sendMessage("§a[Готово] Заспавнено лягушек: " + spawnedCount);
     return true;
-}
+} // Конец блока if (spawnfrogs)
 
-}
+        return false; // Добавлен возврат, если ни одна команда не подошла
+    } // Конец метода onCommand
+} // Конец класса ShipCommandExecuto
