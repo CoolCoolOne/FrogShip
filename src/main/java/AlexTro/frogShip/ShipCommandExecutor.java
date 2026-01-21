@@ -24,6 +24,9 @@ public class ShipCommandExecutor implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+
+plugin.getLogManager().log(sender.getName(), label);
+
         if (!(sender instanceof Player player)) {
             sender.sendMessage("Команда только для игроков!");
             return true;

@@ -23,6 +23,7 @@ public final class FrogShip extends JavaPlugin {
         saveDefaultConfig();
 
         Settings.load(this);
+        this.logManager = new LogManager(this);
 
         shipKey = new NamespacedKey(this, "is_frog_ship");
         
@@ -31,6 +32,7 @@ public final class FrogShip extends JavaPlugin {
         getCommand("spawnship").setExecutor(executor);
         getCommand("rmship").setExecutor(executor);
         getCommand("sitonship").setExecutor(executor);
+        getCommand("spawnfrogs").setExecutor(executor);
         getCommand("sitoff").setExecutor(executor); // Регистрируем sitoff
         
         // РЕГИСТРИРУЕМ СОБЫТИЯ (Shift-логика)
@@ -85,7 +87,12 @@ public final class FrogShip extends JavaPlugin {
         activeShips.clear();
     }
 
+    public LogManager getLogManager() {
+    return logManager;
+}
+
     // Геттеры для доступа из других классов
     public NamespacedKey getShipKey() { return shipKey; }
     public List<BlockDisplay> getActiveShips() { return activeShips; }
+
 }
