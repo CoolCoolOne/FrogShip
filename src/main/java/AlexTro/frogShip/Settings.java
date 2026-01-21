@@ -7,6 +7,8 @@ public class Settings {
     public static int smokeCount;
     public static int lanternCount;
     public static int frogGlowCount;
+    public static int musicNoteCount;
+    public static double musicNoteChance;
 
     public static void load(FrogShip plugin) {
         plugin.saveDefaultConfig(); // Создаст файл, если его нет

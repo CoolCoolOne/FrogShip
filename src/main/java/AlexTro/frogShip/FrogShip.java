@@ -17,6 +17,7 @@ public final class FrogShip extends JavaPlugin {
     // Эти переменные остаются здесь, так как корабль всегда один
     private final List<BlockDisplay> activeShips = new ArrayList<>();
     private NamespacedKey shipKey;
+    private LogManager logManager;
 
     @Override
     public void onEnable() {
