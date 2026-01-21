@@ -26,53 +26,45 @@ public class ShipEvents implements Listener {
     public void onShift(EntityDismountEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
 
-        // Обработка принудительного выхода
+        // 1. Пропускаем, если игрок реально выходит через команду
         if (player.getScoreboardTags().contains("is_leaving_ship")) {
             player.removeScoreboardTag("is_leaving_ship");
             return;
         }
 
-        // ПРОВЕРКА КУЛДАУНА (исправляет двойное сообщение)
-        long now = System.currentTimeMillis();
-        if (lastTransfer.containsKey(player.getUniqueId())) {
-            if (now - lastTransfer.get(player.getUniqueId()) < 200) { // 200 мс достаточно
-                event.setCancelled(true); // Всё равно отменяем выход
-                return;
-            }
-        }
-
+        // 2. Валидация сиденья
         if (!(event.getDismounted() instanceof ArmorStand currentSeat)) return;
         if (!currentSeat.getScoreboardTags().contains("ship_seat")) return;
 
-        // Отменяем выход
-        event.setCancelled(true);
+        // 3. Кулдаун (защита от спама)
+        long now = System.currentTimeMillis();
+        if (lastTransfer.getOrDefault(player.getUniqueId(), 0L) > now - 300) {
+            return;
+        }
+        lastTransfer.put(player.getUniqueId(), now);
 
-        // Поиск мест
+        // 4. Поиск нового места
         List<ArmorStand> availableSeats = player.getWorld().getNearbyEntities(player.getLocation(), 10, 5, 10).stream()
-                .filter(e -> e instanceof ArmorStand)
+                .filter(e -> e instanceof ArmorStand as && as.getScoreboardTags().contains("ship_seat_player"))
                 .map(e -> (ArmorStand) e)
-                .filter(as -> as.getScoreboardTags().contains("ship_seat_player"))
-                .filter(as -> !as.equals(currentSeat))
-                .filter(as -> as.getPassengers().isEmpty())
+                .filter(as -> !as.equals(currentSeat) && as.getPassengers().isEmpty())
                 .collect(Collectors.toList());
 
         if (availableSeats.isEmpty()) {
-            player.sendActionBar("§cНет других свободных мангровых мест!");
+            player.sendActionBar("§cНет других свободных мест!");
             return;
         }
 
-        // Записываем время текущей пересадки
-        lastTransfer.put(player.getUniqueId(), now);
-
         ArmorStand nextSeat = availableSeats.get(random.nextInt(availableSeats.size()));
 
-        // Пересадка
+        // 5. САМОЕ ВАЖНОЕ: Пересадка в следующем тике
+        // НЕ отменяем event, даем игроку слезть, и тут же сажаем обратно
         Bukkit.getScheduler().runTask(plugin, () -> {
-            nextSeat.addPassenger(player);
-            player.sendMessage("§bПерепрыгнул на другое сиденье! Сойти: /sitoff");
+            if (nextSeat.isValid() && nextSeat.getPassengers().isEmpty()) {
+                nextSeat.addPassenger(player);
+                player.sendActionBar("§bПерепрыгнул!");
+            }
         });
-        
-        // Очистка мапы через 5 секунд, чтобы не забивать память
-        Bukkit.getScheduler().runTaskLater(plugin, () -> lastTransfer.remove(player.getUniqueId()), 100L);
     }
+
 }

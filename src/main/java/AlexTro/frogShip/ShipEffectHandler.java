@@ -49,7 +49,7 @@ public class ShipEffectHandler {
         }
         else if (mat == Material.POLISHED_BLACKSTONE_BRICK_WALL && Settings.smokeCount > 0) {
     // Добавляем 0.5 к X и Z, чтобы дым шел из центра трубы, а не из угла
-    Location smokeLoc = realLoc.clone().add(0.5, 1.2, 0); 
+    Location smokeLoc = realLoc.clone().add(0, 1.2, 0.5);
     realLoc.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, smokeLoc, Settings.smokeCount, 0.05, 0.1, 0.05, 0.01);
 }
         else if ((mat == Material.LANTERN || mat == Material.SEA_LANTERN || mat == Material.GLOWSTONE) && Settings.lanternCount > 0) {

@@ -64,14 +64,25 @@ plugin.getLogManager().log(sender.getName(), label);
         // Логика принудительного выхода
         if (command.getName().equalsIgnoreCase("sitoff")) {
             if (player.getVehicle() instanceof ArmorStand as && as.getScoreboardTags().contains("ship_seat")) {
-                player.addScoreboardTag("is_leaving_ship"); 
+                player.addScoreboardTag("is_leaving_ship");
+
+                // 1. Запоминаем локацию выхода (чуть выше сиденья или в конкретную точку)
+                Location exitLoc = player.getLocation().add(0, 1.0, 0);
+
+                // 2. Снимаем игрока
                 player.leaveVehicle();
-                player.sendMessage("§eВы сошли с корабля.");
+
+                // 3. Телепортируем в безопасное место в следующем тике, чтобы перебить ванильное выталкивание
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    player.teleport(exitLoc);
+                    player.sendMessage("§eВы сошли с корабля.");
+                });
             } else {
                 player.sendMessage("§cВы не сидите на корабле!");
             }
             return true;
         }
+
 
         if (command.getName().equalsIgnoreCase("spawnship")) {
             if (!plugin.getActiveShips().isEmpty()) {
