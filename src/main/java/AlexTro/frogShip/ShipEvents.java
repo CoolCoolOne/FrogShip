@@ -14,8 +14,9 @@ public class ShipEvents implements Listener {
 
     private final FrogShip plugin;
     private final Random random = new Random();
-    // Список игроков, которые прямо сейчас находятся в процессе пересадки
-    private final Set<UUID> processingPlayers = new HashSet<>();
+    
+    // Используем Map для хранения времени последней пересадки (Cooldown)
+    private final Map<UUID, Long> lastTransfer = new HashMap<>();
 
     public ShipEvents(FrogShip plugin) {
         this.plugin = plugin;
@@ -25,23 +26,28 @@ public class ShipEvents implements Listener {
     public void onShift(EntityDismountEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
 
+        // Обработка принудительного выхода
         if (player.getScoreboardTags().contains("is_leaving_ship")) {
-            player.removeScoreboardTag("is_leaving_ship"); // Удаляем тег сразу же
-            return; // Позволяем ему выйти из транспорта
+            player.removeScoreboardTag("is_leaving_ship");
+            return;
         }
 
-        // 1. Если игрок уже в процессе пересадки — игнорируем событие
-        if (processingPlayers.contains(player.getUniqueId())) return;
+        // ПРОВЕРКА КУЛДАУНА (исправляет двойное сообщение)
+        long now = System.currentTimeMillis();
+        if (lastTransfer.containsKey(player.getUniqueId())) {
+            if (now - lastTransfer.get(player.getUniqueId()) < 200) { // 200 мс достаточно
+                event.setCancelled(true); // Всё равно отменяем выход
+                return;
+            }
+        }
 
         if (!(event.getDismounted() instanceof ArmorStand currentSeat)) return;
-
-        // Проверяем, что это именно сиденье корабля
         if (!currentSeat.getScoreboardTags().contains("ship_seat")) return;
 
-        // Отменяем стандартное слезание (игрок остается в "состоянии сидения")
+        // Отменяем выход
         event.setCancelled(true);
 
-        // Ищем свободные мангровые сиденья
+        // Поиск мест
         List<ArmorStand> availableSeats = player.getWorld().getNearbyEntities(player.getLocation(), 10, 5, 10).stream()
                 .filter(e -> e instanceof ArmorStand)
                 .map(e -> (ArmorStand) e)
@@ -51,27 +57,22 @@ public class ShipEvents implements Listener {
                 .collect(Collectors.toList());
 
         if (availableSeats.isEmpty()) {
-            // Чтобы не спамить чат при каждом микро-движении Shift,
-            // можно либо убрать сообщение, либо слать его в ActionBar
             player.sendActionBar("§cНет других свободных мангровых мест!");
             return;
         }
 
-        // Выбираем новое место
+        // Записываем время текущей пересадки
+        lastTransfer.put(player.getUniqueId(), now);
+
         ArmorStand nextSeat = availableSeats.get(random.nextInt(availableSeats.size()));
 
-        // 2. Блокируем повторный вход в этот метод
-        processingPlayers.add(player.getUniqueId());
-
-        // 3. Выполняем пересадку в следующем тике
+        // Пересадка
         Bukkit.getScheduler().runTask(plugin, () -> {
-            try {
-                nextSeat.addPassenger(player);
-                player.sendMessage("§bПерепрыгнул на другое сиденье!");
-            } finally {
-                // В любом случае удаляем игрока из списка обработки
-                processingPlayers.remove(player.getUniqueId());
-            }
+            nextSeat.addPassenger(player);
+            player.sendMessage("§bПерепрыгнул на другое сиденье! Сойти: /sitoff");
         });
+        
+        // Очистка мапы через 5 секунд, чтобы не забивать память
+        Bukkit.getScheduler().runTaskLater(plugin, () -> lastTransfer.remove(player.getUniqueId()), 100L);
     }
 }

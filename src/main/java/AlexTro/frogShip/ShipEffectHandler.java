@@ -19,6 +19,9 @@ public class ShipEffectHandler {
     public static void playEffects(BlockDisplay part, FrogShip plugin) {
         Material mat = part.getBlock().getMaterial();
 
+        // 1. Быстрая проверка: если эффекты выключены в ноль, выходим сразу
+        if (Settings.bubbleCount <= 0 && Settings.smokeCount <= 0 && Settings.lanternCount <= 0) return;
+
         NamespacedKey offXKey = new NamespacedKey(plugin, "offset_x");
         NamespacedKey offYKey = new NamespacedKey(plugin, "offset_y");
         NamespacedKey offZKey = new NamespacedKey(plugin, "offset_z");
@@ -29,46 +32,58 @@ public class ShipEffectHandler {
 
         if (offX == null) return; 
 
-        // 1. Получаем текущий угол поворота корня корабля
         float shipYaw = 0;
         if (part.getVehicle() instanceof BlockDisplay root) {
             shipYaw = root.getLocation().getYaw();
         }
         
-        // 2. Поворачиваем вектор смещения на угол корабля
         Vector offset = new Vector(offX, offY, offZ);
         offset.rotateAroundY(Math.toRadians(-shipYaw)); 
 
-        // 3. Итоговая позиция
         Location realLoc = part.getLocation().clone().add(offset);
 
-        // --- ЛОГИКА ЧАСТИЦ ---
+        // --- ИСПОЛЬЗУЕМ КЭШИРОВАННЫЕ НАСТРОЙКИ ---
 
-        // Брызги воды (BARRIER используется как технический блок под килем)
-        if (mat == Material.BARRIER) {
-            realLoc.getWorld().spawnParticle(Particle.BUBBLE_COLUMN_UP, realLoc, 2, 0.1, 0.1, 0.1, 0.02);
-            // Добавляем немного светящихся частиц к воде
-            realLoc.getWorld().spawnParticle(Particle.GLOW, realLoc, 1, 0.2, 0.2, 0.2, 0.02);
+        if (mat == Material.BARRIER && Settings.bubbleCount > 0) {
+            realLoc.getWorld().spawnParticle(Particle.BUBBLE_COLUMN_UP, realLoc, Settings.bubbleCount, 0.1, 0.1, 0.1, 0.02);
         }
-        // Дым из трубы
-        else if (mat == Material.POLISHED_BLACKSTONE_BRICK_WALL) {
-            realLoc.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, realLoc.clone().add(0, 1.2, 0), 1, 0.05, 0.1, 0.05, 0.01);
+        else if (mat == Material.POLISHED_BLACKSTONE_BRICK_WALL && Settings.smokeCount > 0) {
+    // Добавляем 0.5 к X и Z, чтобы дым шел из центра трубы, а не из угла
+    Location smokeLoc = realLoc.clone().add(0.5, 1.2, 0); 
+    realLoc.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, smokeLoc, Settings.smokeCount, 0.05, 0.1, 0.05, 0.01);
+}
+        else if ((mat == Material.LANTERN || mat == Material.SEA_LANTERN || mat == Material.GLOWSTONE) && Settings.lanternCount > 0) {
+            realLoc.getWorld().spawnParticle(Particle.GLOW, realLoc.clone().add(0.5, 0.5, 0.5), Settings.lanternCount, 0.3, 0.3, 0.3, 0.02);
         }
-        // Светящиеся частицы для фонарей или магических блоков
-        else if (mat == Material.LANTERN || mat == Material.SEA_LANTERN || mat == Material.GLOWSTONE) {
-            realLoc.getWorld().spawnParticle(Particle.GLOW, realLoc.clone().add(0.5, 0.5, 0.5), 1, 0.3, 0.3, 0.3, 0.02);
-        }
+        // Логика для красного ковра (музыкальное выступление)
+else if (mat == Material.RED_CARPET && Settings.musicNoteCount > 0) {
+    // Проверка шанса, чтобы ноты не вылетали сплошным потоком
+    if (ThreadLocalRandom.current().nextDouble() < Settings.musicNoteChance) {
+        
+        // Смещаем позицию к центру ковра и поднимаем на уровень головы (1.2 - 1.5 метра)
+        Location noteLoc = realLoc.clone().add(0.5, 1.5, 0.5);
+        
+        // Спавним ноту
+        // Параметр extra (последний) установленный в 1.0 дает случайный цвет ноты в Minecraft
+        realLoc.getWorld().spawnParticle(
+            Particle.NOTE, 
+            noteLoc, 
+            Settings.musicNoteCount, 
+            0.5, 0.5, 0.5, 1.0 
+        );
+    }
+}
+
     }
 
     public static void playSeatEffects(ArmorStand seat, FrogShip plugin) {
-        // Проверяем, что это бамбуковое сиденье и на нем кто-то есть
+        if (Settings.frogGlowCount <= 0) return; // Оптимизация: не считаем логику, если частицы выключены
+
         if (seat.getScoreboardTags().contains("ship_seat_mob") && !seat.getPassengers().isEmpty()) {
             Entity passenger = seat.getPassengers().get(0);
 
             if (passenger instanceof Frog frog) {
-                // Шанс примерно раз в 10 секунд
                 if (ThreadLocalRandom.current().nextDouble() < 0.005) {
-                    // Звук кваканья
                     frog.getWorld().playSound(
                         frog.getLocation(), 
                         Sound.ENTITY_FROG_AMBIENT, 
@@ -76,11 +91,10 @@ public class ShipEffectHandler {
                         (float) (0.8 + Math.random() * 0.4)
                     );
                     
-                    // Светящиеся частицы при кваканье
                     frog.getWorld().spawnParticle(
                         Particle.GLOW,
                         frog.getLocation().add(0, 0.5, 0),
-                        5, 0.2, 0.2, 0.2, 0.05
+                        Settings.frogGlowCount, 0.2, 0.2, 0.2, 0.05
                     );
                 }
             }
