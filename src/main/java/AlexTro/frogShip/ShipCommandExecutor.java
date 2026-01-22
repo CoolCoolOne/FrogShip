@@ -43,7 +43,7 @@ plugin.getLogManager().log(sender.getName(), label);
         // --- Новая команда: /rmship ---
     if (command.getName().equalsIgnoreCase("rmship")) {
         if (plugin.getActiveShips().isEmpty()) {
-            player.sendMessage("§cКорабля сейчас нет в мире!");
+            Bukkit.broadcastMessage("Корабля сейчас нет.");
             return true;
         }
         plugin.removeAllShips();
@@ -104,12 +104,14 @@ if (!(sender instanceof Player player)) {
 
 
         if (command.getName().equalsIgnoreCase("spawnship")) {
+            // Проверка наличия корабля через plugin, а сообщения шлем отправителю (sender)
             if (!plugin.getActiveShips().isEmpty()) {
-            player.sendMessage("§cКорабль уже заспавнен! Сначала удалите его командой /rmship.");
-            return true;
-        }
+                sender.sendMessage("§cКорабль уже заспавнен! Сначала удалите его командой /rmship.");
+                return true;
+            }
+
             if (args.length < 3) {
-                player.sendMessage("§cИспользование: /spawnship <x> <y> <z>");
+                sender.sendMessage("§cИспользование: /spawnship <x> <y> <z>");
                 return true;
             }
 
@@ -118,71 +120,75 @@ if (!(sender instanceof Player player)) {
                 int y = Integer.parseInt(args[1]);
                 int z = Integer.parseInt(args[2]);
 
+                // Используем targetWorld, который определен в начале onCommand
                 Location targetLoc = new Location(targetWorld, x + 0.5, y + 0.5, z + 0.5);
 
                 plugin.removeAllShips();
                 plugin.cleanAllWorldsFromShips();
 
                 ShipSpawner.spawn(plugin, targetLoc);
-                player.sendMessage(String.format("§eКорабль появился на координатах: %d, %d, %d", x, y, z));
+
+                // Красивое уведомление в чат всем игрокам о появлении корабля
+                Bukkit.broadcastMessage(String.format("§6[FrogShip] §eКорабль появился на координатах: %d, %d, %d", x, y, z));
 
             } catch (NumberFormatException e) {
-                player.sendMessage("§cОшибка: Координаты должны быть целыми числами!");
+                sender.sendMessage("§cОшибка: Координаты должны быть целыми числами!");
             }
             return true;
         }
 
-if (command.getName().equalsIgnoreCase("spawnfrogs")) {
-    player.sendMessage("§7[Debug] Поиск бамбуковых сидений в текущем мире...");
 
-    // Получаем вообще все ArmorStand в мире для сравнения
-    List<ArmorStand> allArmorStands = targetWorld.getEntitiesByClass(ArmorStand.class).stream().toList();
-    player.sendMessage("§7[Debug] Всего ArmorStand в мире: " + allArmorStands.size());
+        if (command.getName().equalsIgnoreCase("spawnfrogs")) {
+            Bukkit.broadcastMessage("§7[Debug] Поиск бамбуковых сидений в мире: " + targetWorld.getName());
 
-    // Фильтруем по тегу ship_seat_mob
-    List<ArmorStand> mobSeats = allArmorStands.stream()
-            .filter(as -> {
-                boolean hasTag = as.getScoreboardTags().contains("ship_seat_mob");
-                return hasTag;
-            })
-            .toList();
-    
-    player.sendMessage("§7[Debug] Найдено сидений с тегом 'ship_seat_mob': " + mobSeats.size());
+            // Получаем все ArmorStand в целевом мире
+            List<ArmorStand> allArmorStands = targetWorld.getEntitiesByClass(ArmorStand.class).stream().toList();
+            Bukkit.broadcastMessage("§7[Debug] Всего ArmorStand в мире: " + allArmorStands.size());
 
-    // Фильтруем только пустые
-    List<ArmorStand> emptyMobSeats = mobSeats.stream()
-            .filter(as -> as.getPassengers().isEmpty())
-            .toList();
+            // Фильтруем по тегу ship_seat_mob
+            List<ArmorStand> mobSeats = allArmorStands.stream()
+                    .filter(as -> as.getScoreboardTags().contains("ship_seat_mob"))
+                    .toList();
 
-    player.sendMessage("§7[Debug] Из них свободно (без пассажиров): " + emptyMobSeats.size());
+            Bukkit.broadcastMessage("§7[Debug] Найдено сидений с тегом 'ship_seat_mob': " + mobSeats.size());
 
-    if (emptyMobSeats.isEmpty()) {
-        player.sendMessage("§c[!] Нет свободных бамбуковых мест для спавна лягушек.");
-        return true;
-    }
+            // Фильтруем только те, где нет пассажиров
+            List<ArmorStand> emptyMobSeats = mobSeats.stream()
+                    .filter(as -> as.getPassengers().isEmpty())
+                    .toList();
 
-    int spawnedCount = 0;
-    for (ArmorStand seat : emptyMobSeats) {
-        try {
-            player.getWorld().spawn(seat.getLocation(), org.bukkit.entity.Frog.class, frog -> {
-                boolean success = seat.addPassenger(frog);
-                frog.setInvulnerable(true);
-                org.bukkit.entity.Frog.Variant[] variants = org.bukkit.entity.Frog.Variant.values();
-                frog.setVariant(variants[new Random().nextInt(variants.length)]);
-                
-                if (!success) {
-                    player.sendMessage("§e[Debug] Не удалось посадить лягушку на сиденье в " + seat.getLocation().toVector());
+            Bukkit.broadcastMessage("§7[Debug] Из них свободно: " + emptyMobSeats.size());
+
+            if (emptyMobSeats.isEmpty()) {
+                Bukkit.broadcastMessage("§c[!] Нет свободных бамбуковых мест для спавна лягушек.");
+                return true;
+            }
+
+            int spawnedCount = 0;
+            for (ArmorStand seat : emptyMobSeats) {
+                try {
+                    // Используем targetWorld вместо player.getWorld()
+                    targetWorld.spawn(seat.getLocation(), org.bukkit.entity.Frog.class, frog -> {
+                        boolean success = seat.addPassenger(frog);
+                        frog.setInvulnerable(true);
+
+                        org.bukkit.entity.Frog.Variant[] variants = org.bukkit.entity.Frog.Variant.values();
+                        frog.setVariant(variants[random.nextInt(variants.length)]);
+
+                        if (!success) {
+                            Bukkit.broadcastMessage("§e[Debug] Не удалось посадить лягушку на сиденье в " + seat.getLocation().toVector());
+                        }
+                    });
+                    spawnedCount++;
+                } catch (Exception e) {
+                    Bukkit.broadcastMessage("§c[Debug] Ошибка при спавне лягушки: " + e.getMessage());
                 }
-            });
-            spawnedCount++;
-        } catch (Exception e) {
-            player.sendMessage("§c[Debug] Ошибка при спавне лягушки: " + e.getMessage());
-        }
-    }
+            }
 
-    player.sendMessage("§a[Готово] Заспавнено лягушек: " + spawnedCount);
-    return true;
-} // Конец блока if (spawnfrogs)
+            Bukkit.broadcastMessage("§a[Готово] Заспавнено лягушек: " + spawnedCount);
+            return true;
+        }
+
 
         return false; // Добавлен возврат, если ни одна команда не подошла
     } // Конец метода onCommand
