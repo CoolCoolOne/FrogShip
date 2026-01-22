@@ -62,7 +62,7 @@ public class ShipEvents implements Listener {
         Bukkit.getScheduler().runTask(plugin, () -> {
             if (nextSeat.isValid() && nextSeat.getPassengers().isEmpty()) {
                 nextSeat.addPassenger(player);
-                player.sendActionBar("§bПерепрыгнул!");
+                player.sendActionBar("§bПерепрыгнул! Чтобы слезть /sitoff");
             }
         });
     }

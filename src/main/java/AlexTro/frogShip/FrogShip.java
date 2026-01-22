@@ -67,11 +67,17 @@ public final class FrogShip extends JavaPlugin {
                     entity.remove();
                 }
             }
-             for (Entity entity : world.getEntitiesByClass(ArmorStand.class)) {
-                if (entity.getScoreboardTags().contains("ship_seat")) {
-                    entity.remove();
-                }
+               for (ArmorStand as : world.getEntitiesByClass(ArmorStand.class)) {
+            if (as.getScoreboardTags().contains("ship_seat")) {
+                // Удаляем лягушек
+                as.getPassengers().forEach(passenger -> {
+                    if (!(passenger instanceof org.bukkit.entity.Player)) {
+                        passenger.remove();
+                    }
+                });
+                as.remove();
             }
+        }
         });
     }
 
@@ -82,9 +88,17 @@ public final class FrogShip extends JavaPlugin {
                 ship.remove();
             }
         }
-        Bukkit.getWorlds().forEach(w -> w.getEntitiesByClass(ArmorStand.class).stream()
-            .filter(as -> as.getScoreboardTags().contains("ship_seat"))
-            .forEach(Entity::remove));
+         Bukkit.getWorlds().forEach(w -> w.getEntitiesByClass(ArmorStand.class).stream()
+        .filter(as -> as.getScoreboardTags().contains("ship_seat"))
+        .forEach(as -> {
+            // Удаляем всех пассажиров (лягушек) перед удалением самого сиденья
+            as.getPassengers().forEach(passenger -> {
+                if (!(passenger instanceof org.bukkit.entity.Player)) { // Игроков не удаляем
+                    passenger.remove();
+                }
+            });
+            as.remove();
+        }));
         activeShips.clear();
     }
 

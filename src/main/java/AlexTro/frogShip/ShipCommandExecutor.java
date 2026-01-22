@@ -27,10 +27,18 @@ public class ShipCommandExecutor implements CommandExecutor {
 
 plugin.getLogManager().log(sender.getName(), label);
 
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage("Команда только для игроков!");
-            return true;
-        }
+        org.bukkit.World targetWorld;
+    if (sender instanceof Player player) {
+        targetWorld = player.getWorld();
+    } else {
+        String worldName = plugin.getConfig().getString("ship-world", "world");
+        targetWorld = Bukkit.getWorld(worldName);
+    }
+
+    if (targetWorld == null) {
+        sender.sendMessage("§cОшибка: Мир не найден в конфиге!");
+        return true;
+    }
 
         // --- Новая команда: /rmship ---
     if (command.getName().equalsIgnoreCase("rmship")) {
@@ -45,6 +53,12 @@ plugin.getLogManager().log(sender.getName(), label);
 
         // Логика посадки на случайное мангровое сиденье
         if (command.getName().equalsIgnoreCase("sitonship")) {
+
+if (!(sender instanceof Player player)) {
+        sender.sendMessage("Командный блок не может сидеть на корабле!");
+        return true;
+    }
+
             List<ArmorStand> playerSeats = player.getWorld().getEntitiesByClass(ArmorStand.class).stream()
                     .filter(as -> as.getScoreboardTags().contains("ship_seat_player"))
                     .filter(as -> as.getPassengers().isEmpty())
@@ -63,6 +77,11 @@ plugin.getLogManager().log(sender.getName(), label);
 
         // Логика принудительного выхода
         if (command.getName().equalsIgnoreCase("sitoff")) {
+
+            if (!(sender instanceof Player player)) {
+        sender.sendMessage("Команда только от игрока!");
+        return true;
+    }
             if (player.getVehicle() instanceof ArmorStand as && as.getScoreboardTags().contains("ship_seat")) {
                 player.addScoreboardTag("is_leaving_ship");
 
@@ -99,7 +118,7 @@ plugin.getLogManager().log(sender.getName(), label);
                 int y = Integer.parseInt(args[1]);
                 int z = Integer.parseInt(args[2]);
 
-                Location targetLoc = new Location(player.getWorld(), x + 0.5, y + 0.5, z + 0.5);
+                Location targetLoc = new Location(targetWorld, x + 0.5, y + 0.5, z + 0.5);
 
                 plugin.removeAllShips();
                 plugin.cleanAllWorldsFromShips();
@@ -117,7 +136,7 @@ if (command.getName().equalsIgnoreCase("spawnfrogs")) {
     player.sendMessage("§7[Debug] Поиск бамбуковых сидений в текущем мире...");
 
     // Получаем вообще все ArmorStand в мире для сравнения
-    List<ArmorStand> allArmorStands = player.getWorld().getEntitiesByClass(ArmorStand.class).stream().toList();
+    List<ArmorStand> allArmorStands = targetWorld.getEntitiesByClass(ArmorStand.class).stream().toList();
     player.sendMessage("§7[Debug] Всего ArmorStand в мире: " + allArmorStands.size());
 
     // Фильтруем по тегу ship_seat_mob

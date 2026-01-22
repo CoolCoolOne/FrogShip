@@ -37,10 +37,17 @@ public class ShipEffectHandler {
             shipYaw = root.getLocation().getYaw();
         }
         
-        Vector offset = new Vector(offX, offY, offZ);
-        offset.rotateAroundY(Math.toRadians(-shipYaw)); 
+// 1. Сначала центрируем (добавляем 0.5), чтобы точка вращения была в центре блока
+Vector offset = new Vector(offX + 0.5, offY + 0.5, offZ + 0.5);
 
-        Location realLoc = part.getLocation().clone().add(offset);
+// 2. Теперь вращаем уже центрированный вектор
+offset.rotateAroundY(Math.toRadians(-shipYaw)); 
+
+// 3. Берем локацию КОРНЯ корабля (root), а не части (part), так надежнее
+if (part.getVehicle() instanceof BlockDisplay root) {
+    Location realLoc = root.getLocation().clone().add(offset);
+    // Теперь realLoc — это ВСЕГДА идеальный центр блока, как бы корабль ни повернулся
+}
 
         // --- ИСПОЛЬЗУЕМ КЭШИРОВАННЫЕ НАСТРОЙКИ ---
 
@@ -49,12 +56,21 @@ public class ShipEffectHandler {
         }
         else if (mat == Material.POLISHED_BLACKSTONE_BRICK_WALL && Settings.smokeCount > 0) {
     // Добавляем 0.5 к X и Z, чтобы дым шел из центра трубы, а не из угла
-    Location smokeLoc = realLoc.clone().add(0, 1.2, 0.5);
+    Location smokeLoc = realLoc.clone().add(0, 0.7, 0);
     realLoc.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, smokeLoc, Settings.smokeCount, 0.05, 0.1, 0.05, 0.01);
 }
         else if ((mat == Material.LANTERN || mat == Material.SEA_LANTERN || mat == Material.GLOWSTONE) && Settings.lanternCount > 0) {
-            realLoc.getWorld().spawnParticle(Particle.GLOW, realLoc.clone().add(0.5, 0.5, 0.5), Settings.lanternCount, 0.3, 0.3, 0.3, 0.02);
-        }
+    // Добавляем проверку шанса. 0.05 — это шанс 5% при каждом вызове.
+    // Если нужно еще реже, поставьте 0.01 (1%) или 0.005
+    if (ThreadLocalRandom.current().nextDouble() < 0.005) { 
+        realLoc.getWorld().spawnParticle(
+            Particle.GLOW, 
+            realLoc.clone().add(0.5, 0.5, 0.5), 
+            Settings.lanternCount, 
+            0.3, 0.3, 0.3, 0.02
+        );
+    }
+}
         // Логика для красного ковра (музыкальное выступление)
 else if (mat == Material.RED_CARPET && Settings.musicNoteCount > 0) {
     // Проверка шанса, чтобы ноты не вылетали сплошным потоком
@@ -83,7 +99,8 @@ else if (mat == Material.RED_CARPET && Settings.musicNoteCount > 0) {
             Entity passenger = seat.getPassengers().get(0);
 
             if (passenger instanceof Frog frog) {
-                if (ThreadLocalRandom.current().nextDouble() < 0.005) {
+
+                if (ThreadLocalRandom.current().nextDouble() < 0.0005) {
                     frog.getWorld().playSound(
                         frog.getLocation(), 
                         Sound.ENTITY_FROG_AMBIENT, 

@@ -55,8 +55,9 @@ float rotSpeed = (float) plugin.getConfig().getDouble("ship.rotation-speed", 0.0
                 0          // Pitch (наклон) оставляем 0
 
 );
-
-        
+// --- ДОБАВИТЬ ЭТИ СТРОКИ ДЛЯ ПЛАВНОСТИ ---
+        root.setInterpolationDelay(0);    // Начинать переход мгновенно
+    root.setInterpolationDuration(1); // Растянуть переход на 1 тик (0.05 сек)
         root.teleport(nextLoc);
 
         // Вызываем вынесенную логику
