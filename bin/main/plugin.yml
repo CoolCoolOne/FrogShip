@@ -1,0 +1,19 @@
+name: FrogShip
+version: '1.0-SNAPSHOT'
+main: AlexTro.frogShip.FrogShip
+api-version: '1.21'
+depend: [WorldEdit]
+commands:
+  spawnship:
+    description: Заспавнить корабль.
+    usage: /spawnship <x> <y> <z>
+  sitonship:
+    description: Сесть на корабль.
+  sitoff:
+    description: "Слезть с корабля"
+  spawnfrogs:
+    description: "Заспавнить лягушек на бамбуковые сиденья"
+  rmship:
+    description: "Удалить текущий корабль"
+  frogmusic:
+    description: Призывает Пашкета и включает музыку.

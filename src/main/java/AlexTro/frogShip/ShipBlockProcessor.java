@@ -13,15 +13,23 @@ import org.bukkit.util.Transformation;
 
 public class ShipBlockProcessor {
 
-    public static void process(FrogShip plugin, BlockDisplay root, Location startLoc, String blockDataStr, float offX, float offY, float offZ) {
+    public static void process(FrogShip plugin, BlockDisplay root, Location startLoc, String blockDataStr, float offX,
+            float offY, float offZ) {
         BlockData data;
         try {
             data = Bukkit.createBlockData(blockDataStr);
         } catch (IllegalArgumentException e) {
-            data = Bukkit.createBlockData(Material.STONE); 
+            data = Bukkit.createBlockData(Material.STONE);
         }
 
         Material mat = data.getMaterial();
+
+        if (mat == Material.LIGHT) {
+            if (data instanceof org.bukkit.block.data.type.Light lightData && lightData.getLevel() == 1) {
+                // Спавним сиденье, используя ту же логику, что и для плит
+                spawnSeat(plugin, startLoc, offX, offY, offZ, mat);
+            }
+        }
 
         // 1. ЛОГИКА СИДЕНИЙ
         if (mat == Material.MANGROVE_SLAB || mat == Material.BAMBOO_SLAB) {
@@ -47,43 +55,67 @@ public class ShipBlockProcessor {
     }
 
     private static void spawnSeat(FrogShip plugin, Location loc, float offX, float offY, float offZ, Material mat) {
-        double addY = plugin.getConfig().getDouble("ship.seat-offset-y", 1.5);
-        double centerX = plugin.getConfig().getDouble("ship.seat-center-xz", 0.5);
-        double centerZ = plugin.getConfig().getDouble("ship.seat-center-xz", 0.5);
+        double addY;
+        double centerX;
+        double centerZ;
+        float finalYaw;
 
-        // Применяем смещение к локации спавна сиденья
-        // BlockDisplay спавнится от угла блока, поэтому мы добавляем 0.5 для центровки
+        // 1. Определяем параметры в зависимости от типа сиденья
+        if (mat == Material.LIGHT) {
+            centerX = plugin.getConfig().getDouble("dj-seat.offset-x", 0.5);
+            addY = plugin.getConfig().getDouble("dj-seat.offset-y", 1.0);
+            centerZ = plugin.getConfig().getDouble("dj-seat.offset-z", 0.5);
+            finalYaw = (float) plugin.getConfig().getDouble("dj-seat.yaw", 0.0);
+        } else {
+            addY = plugin.getConfig().getDouble("ship.seat-offset-y", 1.5);
+            centerX = plugin.getConfig().getDouble("ship.seat-center-xz", 0.5);
+            centerZ = plugin.getConfig().getDouble("ship.seat-center-xz", 0.5);
+            finalYaw = (float) (Math.random() * 360.0); // Рандом для обычных лягушек
+        }
+
+        // 2. Создаем локацию и устанавливаем Yaw
         Location seatLoc = loc.clone().add(offX + centerX, offY + addY, offZ + centerZ);
+        seatLoc.setYaw(finalYaw);
+
+        // 3. Спавним ОДИН ArmorStand
         ArmorStand seat = (ArmorStand) loc.getWorld().spawnEntity(seatLoc, EntityType.ARMOR_STAND);
-        float randomYaw = (float) (Math.random() * 360.0);
-        
+
         seat.setVisible(false);
         seat.setGravity(false);
         seat.setSmall(true);
         seat.setMarker(true);
-        
-        seat.addScoreboardTag("ship_seat");
-        seat.addScoreboardTag(mat == Material.MANGROVE_SLAB ? "ship_seat_player" : "ship_seat_mob");
 
+        // 4. Добавляем теги
+        seat.addScoreboardTag("ship_seat");
+        if (mat == Material.MANGROVE_SLAB) {
+            seat.addScoreboardTag("ship_seat_player");
+        } else if (mat == Material.BAMBOO_SLAB) {
+            seat.addScoreboardTag("ship_seat_mob");
+        } else if (mat == Material.LIGHT) {
+            seat.addScoreboardTag("ship_seat_dj");
+        }
+
+        // 5. Сохраняем данные в PDC (для движения и поворота корабля)
         NamespacedKey ox = new NamespacedKey(plugin, "seat_off_x");
         NamespacedKey oy = new NamespacedKey(plugin, "seat_off_y");
         NamespacedKey oz = new NamespacedKey(plugin, "seat_off_z");
-
-        seat.getPersistentDataContainer().set(ox, PersistentDataType.DOUBLE, (double) offX + centerX);
-        seat.getPersistentDataContainer().set(oy, PersistentDataType.DOUBLE, (double) offY + addY);
-        seat.getPersistentDataContainer().set(oz, PersistentDataType.DOUBLE, (double) offZ + centerZ);
-
         NamespacedKey yawKey = new NamespacedKey(plugin, "seat_yaw");
-seat.getPersistentDataContainer().set(yawKey, PersistentDataType.FLOAT, randomYaw);
+
+        seat.getPersistentDataContainer().set(ox, PersistentDataType.DOUBLE, offX + centerX);
+        seat.getPersistentDataContainer().set(oy, PersistentDataType.DOUBLE, offY + addY);
+        seat.getPersistentDataContainer().set(oz, PersistentDataType.DOUBLE, offZ + centerZ);
+        seat.getPersistentDataContainer().set(yawKey, PersistentDataType.FLOAT, finalYaw);
     }
 
-    private static void saveMetadata(FrogShip plugin, BlockDisplay part, float offX, float offY, float offZ, Material mat, BlockData data) {
+    private static void saveMetadata(FrogShip plugin, BlockDisplay part, float offX, float offY, float offZ,
+            Material mat, BlockData data) {
         part.getPersistentDataContainer().set(new NamespacedKey(plugin, "offset_x"), PersistentDataType.FLOAT, offX);
         part.getPersistentDataContainer().set(new NamespacedKey(plugin, "offset_y"), PersistentDataType.FLOAT, offY);
         part.getPersistentDataContainer().set(new NamespacedKey(plugin, "offset_z"), PersistentDataType.FLOAT, offZ);
 
         if (mat == Material.SMOOTH_RED_SANDSTONE || mat == Material.RED_CONCRETE || mat == Material.IRON_BLOCK) {
-            part.getPersistentDataContainer().set(new NamespacedKey(plugin, "wheel_type"), PersistentDataType.STRING, "blade");
+            part.getPersistentDataContainer().set(new NamespacedKey(plugin, "wheel_type"), PersistentDataType.STRING,
+                    "blade");
         }
 
         if (data.getLightEmission() > 0) {

@@ -31,6 +31,7 @@ public final class FrogShip extends JavaPlugin {
         // Регистрируем команды в отдельном классе
         ShipCommandExecutor executor = new ShipCommandExecutor(this);
         getCommand("spawnship").setExecutor(executor);
+        getCommand("frogmusic").setExecutor(executor);
         getCommand("rmship").setExecutor(executor);
         getCommand("sitonship").setExecutor(executor);
         getCommand("spawnfrogs").setExecutor(executor);
