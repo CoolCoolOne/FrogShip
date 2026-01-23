@@ -15,3 +15,5 @@ commands:
     description: "Заспавнить лягушек на бамбуковые сиденья"
   rmship:
     description: "Удалить текущий корабль"
+  frogmusic:
+    description: Призывает Пашкета и включает музыку.

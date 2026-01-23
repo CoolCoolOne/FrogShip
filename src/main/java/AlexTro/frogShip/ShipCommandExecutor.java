@@ -216,17 +216,17 @@ public class ShipCommandExecutor implements CommandExecutor {
 
       // 2. Спавним особую лягушку на это место
       targetWorld.spawn(djSeat.getLocation(), org.bukkit.entity.Frog.class, frog -> {
-        frog.setCustomName("§6§lDJ Froggy");
+        frog.setCustomName("§6§lДжейсон Фандерберкер");
         frog.setCustomNameVisible(true);
         frog.setInvulnerable(true); // Чтобы не убили
         frog.setGlowing(true); // Чтобы выделялась
 
         // Устанавливаем белый (теплый) вариант
-        frog.setVariant(org.bukkit.entity.Frog.Variant.COLD);
+        frog.setVariant(org.bukkit.entity.Frog.Variant.TEMPERATE);
 
         // --- УВЕЛИЧЕНИЕ РАЗМЕРА ---
         // Значение 2.0 сделает её в 2 раза больше, 3.0 - в три и так далее.
-        double scaleValue = 2.0;
+        double scaleValue = 2.5;
         org.bukkit.attribute.AttributeInstance scaleAttr = frog.getAttribute(org.bukkit.attribute.Attribute.SCALE);
         if (scaleAttr != null) {
           scaleAttr.setBaseValue(scaleValue);
