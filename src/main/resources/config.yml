@@ -12,6 +12,11 @@ effects:
   music_note_chance: 0.01 # Шанс появления (0.1 = 10% шанс каждый тик)
 ship-start-delay: 30
 ship-yaw-offset: 90.0
+dj-seat:
+  offset-x: 0.5
+  offset-y: 1.0
+  offset-z: 0.5
+  yaw: 180.0
 ship-route:
   - {x: 0, y: 64, z: -400}
   - {x: 50, y: 64, z: -400}
