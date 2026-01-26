@@ -15,5 +15,14 @@ commands:
     description: "Заспавнить лягушек на бамбуковые сиденья"
   rmship:
     description: "Удалить текущий корабль"
-  frogmusic:
+  spawnjason:
     description: Призывает Пашкета и включает музыку.
+  embark:
+    description: "Посадить игрока на корабль (для КБ)"
+    usage: "/embark <player>"
+  audioship:
+    description: "Включить музыку игроку"
+    usage: "/audioship <player>"
+  stopaudioship:
+    description: "Остановить вещание для игрока"
+    usage: "/stopaudioship [player]"
