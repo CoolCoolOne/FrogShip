@@ -20,7 +20,7 @@ public class ShipInteractionExecutor implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        
+
         // Команда: /sitonship (только для игрока, который сам её вводит)
         if (command.getName().equalsIgnoreCase("sitonship")) {
             if (!(sender instanceof Player player)) {
@@ -33,13 +33,36 @@ public class ShipInteractionExecutor implements CommandExecutor {
         // Команда: /embark <игрок> (может выполнить командный блок)
         if (command.getName().equalsIgnoreCase("embark")) {
             if (args.length < 1) {
-                sender.sendMessage("§cИспользование: /embark <ник_игрока>");
+                sender.sendMessage("§cИспользование: /embark <ник> или /embark @p");
                 return true;
             }
 
-            Player target = Bukkit.getPlayer(args[0]);
+            Player target;
+
+            if (args[0].equalsIgnoreCase("@p")) {
+                // Логика поиска ближайшего игрока
+                if (sender instanceof Player p) {
+                    target = p; // Если пишет игрок, ближайший — он сам
+                } else if (sender instanceof org.bukkit.command.BlockCommandSender block) {
+                    // Если пишет КБ, ищем ближайшего в радиусе 50 блоков
+                    Location loc = block.getBlock().getLocation();
+                    target = loc.getWorld().getNearbyEntities(loc, 50, 50, 50).stream()
+                            .filter(e -> e instanceof Player)
+                            .map(e -> (Player) e)
+                            // Сортируем по дистанции, чтобы найти именно ближайшего
+                            .min((p1, p2) -> Double.compare(p1.getLocation().distance(loc),
+                                    p2.getLocation().distance(loc)))
+                            .orElse(null);
+                } else {
+                    target = null;
+                }
+            } else {
+                // Если ввели обычный ник
+                target = Bukkit.getPlayer(args[0]);
+            }
+
             if (target == null) {
-                sender.sendMessage("§cОшибка: Игрок " + args[0] + " не найден!");
+                sender.sendMessage("§cОшибка: Игрок не найден!");
                 return true;
             }
 
@@ -48,7 +71,8 @@ public class ShipInteractionExecutor implements CommandExecutor {
 
         // Команда: /sitoff (выход)
         if (command.getName().equalsIgnoreCase("sitoff")) {
-            if (!(sender instanceof Player player)) return true;
+            if (!(sender instanceof Player player))
+                return true;
             return handleSitOff(player);
         }
 
@@ -78,7 +102,7 @@ public class ShipInteractionExecutor implements CommandExecutor {
             player.addScoreboardTag("is_leaving_ship");
             Location exit = player.getLocation().add(0, 1.0, 0);
             player.leaveVehicle();
-            
+
             Bukkit.getScheduler().runTask(plugin, () -> {
                 player.teleport(exit);
                 player.sendMessage("§eВы сошли с корабля.");

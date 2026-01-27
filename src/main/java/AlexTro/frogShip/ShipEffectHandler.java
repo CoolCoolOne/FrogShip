@@ -20,7 +20,9 @@ public class ShipEffectHandler {
         Material mat = part.getBlock().getMaterial();
 
         // 1. Быстрая проверка: если эффекты выключены, выходим
-        if (Settings.bubbleCount <= 0 && Settings.smokeCount <= 0 && Settings.lanternCount <= 0 && Settings.musicNoteCount <= 0) return;
+        if (Settings.bubbleCount <= 0 && Settings.smokeCount <= 0 && Settings.lanternCount <= 0
+                && Settings.musicNoteCount <= 0)
+            return;
 
         NamespacedKey offXKey = new NamespacedKey(plugin, "offset_x");
         NamespacedKey offYKey = new NamespacedKey(plugin, "offset_y");
@@ -30,7 +32,8 @@ public class ShipEffectHandler {
         Float offY = part.getPersistentDataContainer().get(offYKey, PersistentDataType.FLOAT);
         Float offZ = part.getPersistentDataContainer().get(offZKey, PersistentDataType.FLOAT);
 
-        if (offX == null || offY == null || offZ == null) return;
+        if (offX == null || offY == null || offZ == null)
+            return;
 
         float shipYaw = 0;
         if (part.getVehicle() instanceof BlockDisplay root) {
@@ -47,32 +50,35 @@ public class ShipEffectHandler {
             realLoc = root.getLocation().clone().add(offset);
         }
 
-        if (realLoc == null) return;
+        if (realLoc == null)
+            return;
 
         // --- ЛОГИКА ЭФФЕКТОВ ---
 
         // Пузыри (под кораблем)
         if (mat == Material.BARRIER && Settings.bubbleCount > 0) {
-            realLoc.getWorld().spawnParticle(Particle.BUBBLE_COLUMN_UP, realLoc, Settings.bubbleCount, 0.1, 0.1, 0.1, 0.02);
+            realLoc.getWorld().spawnParticle(Particle.BUBBLE_COLUMN_UP, realLoc, Settings.bubbleCount, 0.1, 0.1, 0.1,
+                    0.02);
         }
 
         // Дым из труб
         else if (mat == Material.POLISHED_BLACKSTONE_BRICK_WALL && Settings.smokeCount > 0) {
             // Приподнимаем только по Y, так как X и Z уже центрированы
             Location smokeLoc = realLoc.clone().add(0, 0.7, 0);
-            realLoc.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, smokeLoc, Settings.smokeCount, 0.05, 0.1, 0.05, 0.01);
+            realLoc.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, smokeLoc, Settings.smokeCount, 0.05, 0.1,
+                    0.05, 0.01);
         }
 
         // Фонари и светящиеся блоки
-        else if ((mat == Material.LANTERN || mat == Material.SEA_LANTERN || mat == Material.GLOWSTONE) && Settings.lanternCount > 0) {
-            if (ThreadLocalRandom.current().nextDouble() < 0.005) {
+        else if ((mat == Material.LANTERN || mat == Material.SEA_LANTERN || mat == Material.GLOWSTONE)
+                && Settings.lanternCount > 0) {
+            if (ThreadLocalRandom.current().nextDouble() < 0.01) {
                 // Убрал лишние +0.5, так как они уже есть в realLoc
                 realLoc.getWorld().spawnParticle(
                         Particle.GLOW,
                         realLoc,
                         Settings.lanternCount,
-                        0.3, 0.3, 0.3, 0.02
-                );
+                        0.3, 0.3, 0.3, 0.02);
             }
         }
 
@@ -86,32 +92,29 @@ public class ShipEffectHandler {
                         Particle.NOTE,
                         noteLoc,
                         Settings.musicNoteCount,
-                        0.5, 0.5, 0.5, 1.0
-                );
+                        0.5, 0.5, 0.5, 1.0);
             }
         }
     }
 
     public static void playSeatEffects(ArmorStand seat, FrogShip plugin) {
-        if (Settings.frogGlowCount <= 0) return;
+        if (Settings.frogGlowCount <= 0)
+            return;
 
         if (seat.getScoreboardTags().contains("ship_seat_mob") && !seat.getPassengers().isEmpty()) {
             Entity passenger = seat.getPassengers().get(0);
 
             if (passenger instanceof Frog frog) {
-                if (ThreadLocalRandom.current().nextDouble() < 0.0005) {
+                if (ThreadLocalRandom.current().nextDouble() < Settings.frogAmbienceChance) {
                     frog.getWorld().playSound(
                             frog.getLocation(),
                             Sound.ENTITY_FROG_AMBIENT,
-                            1.0f,
-                            (float) (0.8 + ThreadLocalRandom.current().nextDouble() * 0.4)
-                    );
-
+                            0.9f,
+                            (float) (0.5 + ThreadLocalRandom.current().nextDouble() * 1.0));
                     frog.getWorld().spawnParticle(
                             Particle.GLOW,
                             frog.getLocation().add(0, 0.5, 0),
-                            Settings.frogGlowCount, 0.2, 0.2, 0.2, 0.05
-                    );
+                            Settings.frogGlowCount, 0.2, 0.2, 0.2, 0.05);
                 }
             }
         }

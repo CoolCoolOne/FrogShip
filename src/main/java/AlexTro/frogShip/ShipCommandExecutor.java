@@ -126,10 +126,11 @@ public class ShipCommandExecutor implements CommandExecutor {
     }
 
     world.spawn(djSeat.getLocation(), Frog.class, frog -> {
-      frog.setCustomName("§6§lДжейсон Фандерберкер");
+      frog.setCustomName("§6§lКВАс");
       frog.setCustomNameVisible(true);
       frog.setInvulnerable(true);
-      frog.setGlowing(true);
+      frog.setGlowing(false);
+      frog.setAI(false);
       frog.setVariant(Frog.Variant.TEMPERATE);
 
       if (frog.getAttribute(Attribute.SCALE) != null) {

@@ -4,6 +4,10 @@ main: AlexTro.frogShip.FrogShip
 api-version: '1.21'
 depend: [WorldEdit]
 commands:
+  frogship:
+    description: "Справка по командам FrogShip"
+    usage: "/frogship"
+    aliases: [fs, ship, froghelp]
   spawnship:
     description: Заспавнить корабль.
     usage: /spawnship <x> <y> <z>

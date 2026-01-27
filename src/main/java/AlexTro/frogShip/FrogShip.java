@@ -28,6 +28,8 @@ public final class FrogShip extends JavaPlugin {
 
         shipKey = new NamespacedKey(this, "is_frog_ship");
 
+        getCommand("frogship").setExecutor(new ShipHelpExecutor());
+
         // Регистрируем команды в отдельном классе
         ShipCommandExecutor shipExecutor = new ShipCommandExecutor(this);
         getCommand("spawnship").setExecutor(shipExecutor);
