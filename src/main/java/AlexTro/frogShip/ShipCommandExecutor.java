@@ -130,7 +130,8 @@ public class ShipCommandExecutor implements CommandExecutor {
       frog.setCustomNameVisible(true);
       frog.setInvulnerable(true);
       frog.setGlowing(false);
-      frog.setAI(false);
+      frog.setAI(true);
+      frog.setCollidable(false);
       frog.setVariant(Frog.Variant.TEMPERATE);
 
       if (frog.getAttribute(Attribute.SCALE) != null) {

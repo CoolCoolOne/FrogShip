@@ -11,7 +11,8 @@ import org.bukkit.util.Vector;
 
 public class ShipPartUpdater {
 
-    public static void updateSeats(FrogShip plugin, Location nextLoc, NamespacedKey oxKey, NamespacedKey oyKey, NamespacedKey ozKey) {
+    public static void updateSeats(FrogShip plugin, Location nextLoc, NamespacedKey oxKey, NamespacedKey oyKey,
+            NamespacedKey ozKey) {
         nextLoc.getWorld().getEntitiesByClass(ArmorStand.class).stream()
                 .filter(as -> as.getScoreboardTags().contains("ship_seat"))
                 .forEach(as -> {
@@ -24,14 +25,51 @@ public class ShipPartUpdater {
                 });
     }
 
-    private static void syncSeatRotation(ArmorStand as, Location shipLoc, double ox, double oy, double oz, FrogShip plugin) {
+    private static void syncSeatRotation(ArmorStand as, Location shipLoc, double ox, double oy, double oz,
+            FrogShip plugin) {
         Vector offset = new Vector(ox, oy, oz);
         offset.rotateAroundY(Math.toRadians(-shipLoc.getYaw()));
         Location seatLoc = shipLoc.clone().add(offset);
+
         NamespacedKey yawKey = new NamespacedKey(plugin, "seat_yaw");
         Float savedYaw = as.getPersistentDataContainer().get(yawKey, PersistentDataType.FLOAT);
-        seatLoc.setYaw(shipLoc.getYaw() + (savedYaw != null ? savedYaw : 0));
+        float baseYaw = (savedYaw != null ? savedYaw : 0);
+
+        // ПРОВЕРКА: Если это сиденье Джейсона
+        if (as.getScoreboardTags().contains("ship_seat_dj")) {
+            // Ищем ближайшего игрока в 2026 году
+            org.bukkit.entity.Player target = seatLoc.getWorld().getNearbyEntities(seatLoc, 10, 5, 10).stream()
+                    .filter(e -> e instanceof org.bukkit.entity.Player)
+                    .map(e -> (org.bukkit.entity.Player) e)
+                    .findFirst()
+                    .orElse(null);
+
+            if (target != null) {
+                // Направляем взгляд на игрока
+                Vector dir = target.getLocation().add(0, 1.5, 0).toVector().subtract(seatLoc.toVector()).normalize();
+                seatLoc.setDirection(dir);
+            } else {
+                // Если игроков нет — смотрит куда положено по конфигу
+                seatLoc.setYaw(shipLoc.getYaw() + baseYaw);
+            }
+        } else {
+            // ОБЫЧНЫЕ ЛЯГУШКИ И ИГРОКИ (просто плывут по курсу)
+            seatLoc.setYaw(shipLoc.getYaw() + baseYaw);
+        }
+
+        // Телепортируем стойку
         as.teleport(seatLoc);
+
+        // ВАЖНО: В 2026 году принудительно телепортируем пассажира-лягушку,
+        // чтобы взгляд обновился мгновенно и не дергался
+        if (!as.getPassengers().isEmpty()) {
+            for (Entity passenger : as.getPassengers()) {
+                if (passenger instanceof org.bukkit.entity.Frog) {
+                    passenger.teleport(seatLoc);
+                }
+            }
+        }
+
         ShipEffectHandler.playSeatEffects(as, plugin);
     }
 
@@ -46,7 +84,8 @@ public class ShipPartUpdater {
         float AXIS_Y = -1.0f;
 
         for (Entity p : root.getPassengers()) {
-            if (!(p instanceof BlockDisplay bd)) continue;
+            if (!(p instanceof BlockDisplay bd))
+                continue;
 
             float ox = bd.getPersistentDataContainer().getOrDefault(offXKey, PersistentDataType.FLOAT, 0f);
             float oy = bd.getPersistentDataContainer().getOrDefault(offYKey, PersistentDataType.FLOAT, 0f);
