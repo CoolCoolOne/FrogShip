@@ -25,7 +25,7 @@ public class ShipPartUpdater {
                 });
     }
 
-    private static void syncSeatRotation(ArmorStand as, Location shipLoc, double ox, double oy, double oz,
+    public static void syncSeatRotation(ArmorStand as, Location shipLoc, double ox, double oy, double oz,
             FrogShip plugin) {
         Vector offset = new Vector(ox, oy, oz);
         offset.rotateAroundY(Math.toRadians(-shipLoc.getYaw()));
@@ -62,13 +62,7 @@ public class ShipPartUpdater {
 
         // ВАЖНО: В 2026 году принудительно телепортируем пассажира-лягушку,
         // чтобы взгляд обновился мгновенно и не дергался
-        if (!as.getPassengers().isEmpty()) {
-            for (Entity passenger : as.getPassengers()) {
-                if (passenger instanceof org.bukkit.entity.Frog) {
-                    passenger.teleport(seatLoc);
-                }
-            }
-        }
+
 
         ShipEffectHandler.playSeatEffects(as, plugin);
     }

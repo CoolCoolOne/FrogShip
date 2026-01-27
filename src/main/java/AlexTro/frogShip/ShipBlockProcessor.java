@@ -13,8 +13,8 @@ import org.bukkit.util.Transformation;
 
 public class ShipBlockProcessor {
 
-    public static void process(FrogShip plugin, BlockDisplay root, Location startLoc, String blockDataStr, float offX,
-            float offY, float offZ) {
+    // Изменили void на ArmorStand
+    public static ArmorStand process(FrogShip plugin, BlockDisplay root, Location startLoc, String blockDataStr, float offX, float offY, float offZ) {
         BlockData data;
         try {
             data = Bukkit.createBlockData(blockDataStr);
@@ -23,17 +23,17 @@ public class ShipBlockProcessor {
         }
 
         Material mat = data.getMaterial();
+        ArmorStand createdSeat = null; // Переменная для хранения стойки
 
+        // 1. ЛОГИКА СИДЕНИЙ (теперь сохраняем результат в переменную)
         if (mat == Material.LIGHT) {
             if (data instanceof org.bukkit.block.data.type.Light lightData && lightData.getLevel() == 1) {
-                // Спавним сиденье, используя ту же логику, что и для плит
-                spawnSeat(plugin, startLoc, offX, offY, offZ, mat);
+                createdSeat = spawnSeat(plugin, startLoc, offX, offY, offZ, mat);
             }
         }
 
-        // 1. ЛОГИКА СИДЕНИЙ
         if (mat == Material.MANGROVE_SLAB || mat == Material.BAMBOO_SLAB) {
-            spawnSeat(plugin, startLoc, offX, offY, offZ, mat);
+            createdSeat = spawnSeat(plugin, startLoc, offX, offY, offZ, mat);
         }
 
         // 2. СОЗДАНИЕ ВИЗУАЛЬНОЙ ЧАСТИ
@@ -43,18 +43,20 @@ public class ShipBlockProcessor {
 
         animateAppearance(plugin, part, offX, offY, offZ);
 
-        // Настройка позиции
         Transformation t = part.getTransformation();
         t.getTranslation().set(offX, offY, offZ);
         part.setTransformation(t);
 
-        // Сохранение метаданных
         saveMetadata(plugin, part, offX, offY, offZ, mat, data);
-
         root.addPassenger(part);
+
+        return createdSeat; // Возвращаем стойку (или null, если это просто блок палубы)
     }
 
-    private static void spawnSeat(FrogShip plugin, Location loc, float offX, float offY, float offZ, Material mat) {
+
+
+
+    private static ArmorStand spawnSeat(FrogShip plugin, Location loc, float offX, float offY, float offZ, Material mat) {
         double addY;
         double centerX;
         double centerZ;
@@ -85,6 +87,7 @@ public class ShipBlockProcessor {
         seat.setSmall(true);
         seat.setMarker(true);
 
+
         // 4. Добавляем теги
         seat.addScoreboardTag("ship_seat");
         if (mat == Material.MANGROVE_SLAB) {
@@ -105,6 +108,8 @@ public class ShipBlockProcessor {
         seat.getPersistentDataContainer().set(oy, PersistentDataType.DOUBLE, offY + addY);
         seat.getPersistentDataContainer().set(oz, PersistentDataType.DOUBLE, offZ + centerZ);
         seat.getPersistentDataContainer().set(yawKey, PersistentDataType.FLOAT, finalYaw);
+
+        return seat; // ОБЯЗАТЕЛЬНО возвращаем созданную стойку
     }
 
     private static void saveMetadata(FrogShip plugin, BlockDisplay part, float offX, float offY, float offZ,

@@ -18,6 +18,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.bukkit.entity.ArmorStand;
+
+
 public class ShipSpawner {
 
 public static void spawn(FrogShip plugin, Location startLoc) {
@@ -36,30 +39,31 @@ public static void spawn(FrogShip plugin, Location startLoc) {
     root.getPersistentDataContainer().set(plugin.getShipKey(), PersistentDataType.BYTE, (byte) 1);
     plugin.getActiveShips().add(root);
 
-    // 3. Загружаем блоки (здесь сработает ваша плавная анимация появления)
-    loadSchematicBlocks(plugin, root, startLoc);
+    // 3. Загружаем блоки и СОБИРАЕМ СИДЕНЬЯ
+    List<ArmorStand> shipSeats = loadSchematicBlocks(plugin, root, startLoc);
 
-    // 4. Логика задержки отплытия из конфига
     int delaySeconds = plugin.getConfig().getInt("ship-start-delay", 30);
-
-    Bukkit.broadcastMessage(String.format("§6[FrogShip] §eКорабль прибыл в порт! Отправление через %d сек. посадка /sitonship", delaySeconds));
+    Bukkit.broadcastMessage(String.format("§6[FrogShip] §eКорабль прибыл! Отправление через %d сек.", delaySeconds));
 
     // 5. Запускаем таймер ожидания
     Bukkit.getScheduler().runTaskLater(plugin, () -> {
-        // Проверяем, что корабль всё еще существует (его не удалили командой /rmship)
         if (root.isValid() && !root.isDead()) {
-            Bukkit.broadcastMessage("§6[FrogShip] §aВсе по местам! Корабль отправляется в путь.");
-            
-            // ЗАПУСК ДВИЖЕНИЯ
-            new ShipMoveTask(plugin, root, route).runTaskTimer(plugin, 0L, 1L);
+            Bukkit.broadcastMessage("§6[FrogShip] §aВсе по местам! Поплыли.");
+
+            // ПЕРЕДАЕМ список сидений в MoveTask
+            new ShipMoveTask(plugin, root, route, shipSeats).runTaskTimer(plugin, 0L, 1L);
         }
-    }, 20L * delaySeconds); 
+    }, 20L * delaySeconds);
 }
 
 
-    private static void loadSchematicBlocks(FrogShip plugin, BlockDisplay root, Location startLoc) {
+    // Убедись, что эти импорты есть в начале файла ShipSpawner.jav
+
+    // Полный обновленный метод:
+    private static List<ArmorStand> loadSchematicBlocks(FrogShip plugin, BlockDisplay root, Location startLoc) {
+        List<ArmorStand> seats = new ArrayList<>(); // Список для сбора всех сидений корабля
         File file = new File(plugin.getDataFolder(), "shipbig2.schem");
-        if (!file.exists()) return;
+        if (!file.exists()) return seats;
 
         try (ClipboardReader reader = ClipboardFormats.findByFile(file).getReader(new FileInputStream(file))) {
             Clipboard clipboard = reader.read();
@@ -72,19 +76,26 @@ public static void spawn(FrogShip plugin, Location startLoc) {
                     for (int z = min.z(); z <= max.z(); z++) {
                         BlockVector3 pos = BlockVector3.at(x, y, z);
                         var block = clipboard.getFullBlock(pos);
+
                         if (block.getBlockType().getMaterial().isAir()) continue;
 
                         float offX = (float) (x - origin.x());
                         float offY = (float) (y - origin.y());
                         float offZ = (float) (z - origin.z());
 
-                        // Вся магия обработки теперь здесь:
-                        ShipBlockProcessor.process(plugin, root, startLoc, block.getAsString(), offX, offY, offZ);
+                        // Вызываем обновленный процесс и получаем стойку, если она создалась
+                        ArmorStand seat = ShipBlockProcessor.process(plugin, root, startLoc, block.getAsString(), offX, offY, offZ);
+
+                        if (seat != null) {
+                            seats.add(seat); // Сохраняем лягушачье место в наш список
+                        }
                     }
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return seats; // Возвращаем наполненный список сидений
     }
+
 }

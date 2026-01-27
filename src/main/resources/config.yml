@@ -1,21 +1,21 @@
 ship-world: "world"
 ship:
   rotation-speed: 0.01      # Чем меньше это число (например, 0.03), тем плавнее поворот корабля. 
-  seat-offset-y: 1.5        # На сколько блоков поднять игрока над базовым сиденьем (0.0=дно блока)
+  seat-offset-y: 0.5        # На сколько блоков поднять игрока над базовым сиденьем (0.0=дно блока)
   seat-center-xz: 0.5       # Добавка 0.5 центрирует сиденье внутри блока 1x1
 effects:
   water_bubbles_amount: 1  # По 1 пузырьку за тик
   smoke_amount: 1          # 1 струйка дыма
   lantern_glow_amount: 1   # Было 5-10, ставим 1 (минимум для видимости)
-  frog_glow_amount: 1      # Лягушка будет лишь слегка подсвечиваться при кваканье
+  frog_glow_amount: 2      # Лягушка будет лишь слегка подсвечиваться при кваканье
   music_note_amount: 1  # Количество нот за один раз
   music_note_chance: 0.01 # Шанс появления (0.1 = 10% шанс каждый тик)
-  frog_ambience_chance: 0.0001 
+  frog_ambience_chance: 0.00005
 ship-start-delay: 30
 ship-yaw-offset: 90.0
 dj-seat:
   offset-x: 0.5
-  offset-y: 1.0
+  offset-y: 0.0
   offset-z: 0.5
   yaw: 180.0
 ship-route:
