@@ -62,7 +62,7 @@ public static void spawn(FrogShip plugin, Location startLoc) {
     // Полный обновленный метод:
     private static List<ArmorStand> loadSchematicBlocks(FrogShip plugin, BlockDisplay root, Location startLoc) {
         List<ArmorStand> seats = new ArrayList<>(); // Список для сбора всех сидений корабля
-        File file = new File(plugin.getDataFolder(), "shipbig2.schem");
+        File file = new File(plugin.getDataFolder(), Settings.schematicName);
         if (!file.exists()) return seats;
 
         try (ClipboardReader reader = ClipboardFormats.findByFile(file).getReader(new FileInputStream(file))) {

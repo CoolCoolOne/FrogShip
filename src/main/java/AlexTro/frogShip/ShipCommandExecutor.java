@@ -45,6 +45,10 @@ public class ShipCommandExecutor implements CommandExecutor {
         return handleSpawnFrogs(targetWorld);
       case "spawnjason":
         return handleFrogMusic(sender, targetWorld);
+      case "reload_shipconf":
+        Settings.load(plugin); // Перезагружаем все данные из конфига в память
+        sender.sendMessage("§a[FrogShip] Конфигурация перезагружена!");
+        return true;
     }
     return false;
   }

@@ -1,16 +1,20 @@
 package AlexTro.frogShip;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.SoundCategory;
+import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import java.util.Comparator;
 
 public class ShipAudioExecutor implements CommandExecutor {
 
     private final FrogShip plugin;
-    private final String TRACK_ID = "frogship.track"; // Вынесли в константу для удобства
+    private final String TRACK_ID = "frogship.track";
 
     public ShipAudioExecutor(FrogShip plugin) {
         this.plugin = plugin;
@@ -21,33 +25,20 @@ public class ShipAudioExecutor implements CommandExecutor {
         
         // --- Логика включения ---
         if (command.getName().equalsIgnoreCase("audioship")) {
-            if (args.length < 1) {
-                sender.sendMessage("§cИспользование: /audioship <игрок>");
-                return true;
-            }
-            Player target = Bukkit.getPlayer(args[0]);
+            Player target = (args.length > 0) ? getTarget(sender, args[0]) : (sender instanceof Player p ? p : null);
+            
             if (target != null) {
                 playShipMusic(target);
             } else {
-                sender.sendMessage("§cИгрок не найден.");
+                sender.sendMessage("§cИгрок не найден или не указан.");
             }
             return true;
         }
 
         // --- Логика выключения ---
         if (command.getName().equalsIgnoreCase("stopaudioship")) {
-            if (args.length < 1) {
-                // Если аргументов нет и команду ввел игрок — выключаем ему
-                if (sender instanceof Player player) {
-                    stopShipMusic(player);
-                } else {
-                    sender.sendMessage("§cИспользование из консоли: /stopaudioship <игрок>");
-                }
-                return true;
-            }
+            Player target = (args.length > 0) ? getTarget(sender, args[0]) : (sender instanceof Player p ? p : null);
 
-            // Выключение звука конкретному игроку (для КБ или админа)
-            Player target = Bukkit.getPlayer(args[0]);
             if (target != null) {
                 stopShipMusic(target);
             } else {
@@ -59,18 +50,30 @@ public class ShipAudioExecutor implements CommandExecutor {
         return false;
     }
 
-    private void playShipMusic(Player player) {
-        // Останавливаем старый, если он играл, чтобы не было наложения
-        player.stopSound(TRACK_ID);
+    // Универсальный метод поиска цели (Ник или @p)
+    private Player getTarget(CommandSender sender, String arg) {
+        if (arg.equalsIgnoreCase("@p")) {
+            Location origin = null;
+            if (sender instanceof Player p) origin = p.getLocation();
+            else if (sender instanceof BlockCommandSender b) origin = b.getBlock().getLocation();
+            else if (sender instanceof Entity e) origin = e.getLocation();
 
-        player.playSound(
-                player.getLocation(),
-                TRACK_ID,
-                SoundCategory.RECORDS, 
-                1.0f, 
-                1.0f 
-        );
-        player.sendMessage("§b[♪] На корабле кто то вещает с микрофона [проверьте громкость. настройка ПЛАСТИНКИ].");
+            if (origin != null) {
+                final Location finalLoc = origin;
+                return origin.getWorld().getNearbyEntities(origin, 50, 50, 50).stream()
+                        .filter(e -> e instanceof Player)
+                        .map(e -> (Player) e)
+                        .min(Comparator.comparingDouble(p -> p.getLocation().distanceSquared(finalLoc)))
+                        .orElse(null);
+            }
+        }
+        return Bukkit.getPlayer(arg);
+    }
+
+    private void playShipMusic(Player player) {
+        player.stopSound(TRACK_ID);
+        player.playSound(player.getLocation(), TRACK_ID, SoundCategory.RECORDS, 1.0f, 1.0f);
+        player.sendMessage("§b[♪] На корабле кто-то вещает с микрофона...");
     }
 
     private void stopShipMusic(Player player) {
@@ -79,9 +82,8 @@ public class ShipAudioExecutor implements CommandExecutor {
     }
 
     public void stopAllMusic() {
-    for (Player player : Bukkit.getOnlinePlayers()) {
-        player.stopSound(TRACK_ID);
-        // Опционально: можно не слать сообщение каждому, чтобы не спамить при удалении
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.stopSound(TRACK_ID);
+        }
     }
-}
 }

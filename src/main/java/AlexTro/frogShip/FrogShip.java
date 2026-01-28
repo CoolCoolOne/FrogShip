@@ -50,6 +50,7 @@ public final class FrogShip extends JavaPlugin {
 
         // РЕГИСТРИРУЕМ СОБЫТИЯ (Shift-логика)
         getServer().getPluginManager().registerEvents(new ShipEvents(this), this);
+        getServer().getPluginManager().registerEvents(new FireworkListener(), this);
 
         cleanAllWorldsFromShips();
 
@@ -89,27 +90,42 @@ public final class FrogShip extends JavaPlugin {
                     as.remove();
                 }
             }
+            for (org.bukkit.entity.Interaction inter : world.getEntitiesByClass(org.bukkit.entity.Interaction.class)) {
+                if (inter.getScoreboardTags().contains("ship_firework_button")) {
+                    inter.remove();
+                }
+            }
         });
     }
 
     public void removeAllShips() {
+        // Чистим активные из списка
         for (BlockDisplay ship : new ArrayList<>(activeShips)) {
             if (ship != null) {
                 ship.getPassengers().forEach(Entity::remove);
                 ship.remove();
             }
         }
-        Bukkit.getWorlds().forEach(w -> w.getEntitiesByClass(ArmorStand.class).stream()
-                .filter(as -> as.getScoreboardTags().contains("ship_seat"))
-                .forEach(as -> {
-                    // Удаляем всех пассажиров (лягушек) перед удалением самого сиденья
-                    as.getPassengers().forEach(passenger -> {
-                        if (!(passenger instanceof org.bukkit.entity.Player)) { // Игроков не удаляем
-                            passenger.remove();
-                        }
+
+        // Глобальная зачистка по всем мирам для надежности
+        Bukkit.getWorlds().forEach(w -> {
+            // Удаляем сиденья
+            w.getEntitiesByClass(ArmorStand.class).stream()
+                    .filter(as -> as.getScoreboardTags().contains("ship_seat"))
+                    .forEach(as -> {
+                        as.getPassengers().forEach(p -> {
+                            if (!(p instanceof org.bukkit.entity.Player))
+                                p.remove();
+                        });
+                        as.remove();
                     });
-                    as.remove();
-                }));
+
+            // НОВОЕ: Удаляем хитбоксы кнопок
+            w.getEntitiesByClass(org.bukkit.entity.Interaction.class).stream()
+                    .filter(inter -> inter.getScoreboardTags().contains("ship_firework_button"))
+                    .forEach(Entity::remove);
+        });
+
         activeShips.clear();
     }
 

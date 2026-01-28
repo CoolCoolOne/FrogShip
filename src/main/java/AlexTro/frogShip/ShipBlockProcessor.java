@@ -14,7 +14,8 @@ import org.bukkit.util.Transformation;
 public class ShipBlockProcessor {
 
     // Изменили void на ArmorStand
-    public static ArmorStand process(FrogShip plugin, BlockDisplay root, Location startLoc, String blockDataStr, float offX, float offY, float offZ) {
+    public static ArmorStand process(FrogShip plugin, BlockDisplay root, Location startLoc, String blockDataStr,
+            float offX, float offY, float offZ) {
         BlockData data;
         try {
             data = Bukkit.createBlockData(blockDataStr);
@@ -36,6 +37,10 @@ public class ShipBlockProcessor {
             createdSeat = spawnSeat(plugin, startLoc, offX, offY, offZ, mat);
         }
 
+        if (mat == Material.PALE_OAK_BUTTON) {
+            spawnFireworkTrigger(plugin, startLoc, offX, offY, offZ);
+        }
+
         // 2. СОЗДАНИЕ ВИЗУАЛЬНОЙ ЧАСТИ
         BlockDisplay part = (BlockDisplay) startLoc.getWorld().spawnEntity(startLoc, EntityType.BLOCK_DISPLAY);
         part.setBlock(data);
@@ -53,10 +58,8 @@ public class ShipBlockProcessor {
         return createdSeat; // Возвращаем стойку (или null, если это просто блок палубы)
     }
 
-
-
-
-    private static ArmorStand spawnSeat(FrogShip plugin, Location loc, float offX, float offY, float offZ, Material mat) {
+    private static ArmorStand spawnSeat(FrogShip plugin, Location loc, float offX, float offY, float offZ,
+            Material mat) {
         double addY;
         double centerX;
         double centerZ;
@@ -86,7 +89,6 @@ public class ShipBlockProcessor {
         seat.setGravity(false);
         seat.setSmall(true);
         seat.setMarker(true);
-
 
         // 4. Добавляем теги
         seat.addScoreboardTag("ship_seat");
@@ -137,6 +139,32 @@ public class ShipBlockProcessor {
 
         // Убираем все задержки (runTaskLater) и Duration
         part.setInterpolationDuration(0);
+    }
+
+    // В метод process добавь проверку:
+
+    // Новый метод для создания хитбокса-триггера
+    private static void spawnFireworkTrigger(FrogShip plugin, Location loc, float offX, float offY, float offZ) {
+        // Смещаем хитбокс чуть вперед от блока, чтобы по нему было легко кликнуть
+        Location triggerLoc = loc.clone().add(offX + 0.5, offY, offZ + 0.5);
+
+        // Используем Interaction (хитбокс без модели, доступен в новых версиях)
+        org.bukkit.entity.Interaction interaction = (org.bukkit.entity.Interaction) loc.getWorld()
+                .spawnEntity(triggerLoc, EntityType.INTERACTION);
+        interaction.setInteractionWidth(0.5f);
+        interaction.setInteractionHeight(0.5f);
+
+        // Помечаем тегом для удаления и поиска
+        interaction.addScoreboardTag("ship_firework_button");
+        interaction.getPersistentDataContainer().set(plugin.getShipKey(), PersistentDataType.BYTE, (byte) 1);
+
+        // Сохраняем оффсеты, чтобы кнопка двигалась вместе с кораблем
+        NamespacedKey ox = new NamespacedKey(plugin, "seat_off_x");
+        NamespacedKey oy = new NamespacedKey(plugin, "seat_off_y");
+        NamespacedKey oz = new NamespacedKey(plugin, "seat_off_z");
+        interaction.getPersistentDataContainer().set(ox, PersistentDataType.DOUBLE, (double) offX + 0.5);
+        interaction.getPersistentDataContainer().set(oy, PersistentDataType.DOUBLE, (double) offY);
+        interaction.getPersistentDataContainer().set(oz, PersistentDataType.DOUBLE, (double) offZ + 0.5);
     }
 
 }

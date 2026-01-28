@@ -30,3 +30,5 @@ commands:
   stopaudioship:
     description: "Остановить вещание для игрока"
     usage: "/stopaudioship [player]"
+  reload_shipconf:
+    description: "Перезагрузить конфигурацию плагина"
