@@ -44,6 +44,7 @@ public class ShipMoveTask extends BukkitRunnable {
         this.ozKey = new NamespacedKey(plugin, "seat_off_z");
     }
 
+
     @Override
     public void run() {
         if (shouldRemove()) {
@@ -53,14 +54,11 @@ public class ShipMoveTask extends BukkitRunnable {
 
         Location currentLoc = root.getLocation();
 
-        // 1. Получаем движение от калькулятора пути
+        // 1. Движение
         double[] xz = pathCalculator.getNextHorizontalOffset(currentLoc);
         double y = pathCalculator.getNextWaveOffset();
-
-        // 2. Получаем плавный поворот от контроллера вращения
         float currentYaw = rotationController.updateAndGetYaw(xz[0], xz[1]);
 
-        // 3. Формируем новую локацию
         Location nextLoc = new Location(
                 currentLoc.getWorld(),
                 currentLoc.getX() + xz[0],
@@ -69,23 +67,40 @@ public class ShipMoveTask extends BukkitRunnable {
                 currentYaw,
                 0);
 
-        // 4. Обновляем сиденья (твоя логика сохранена)
+        // 2. Сиденья
         updateSeatsDirectly(nextLoc);
 
-        // 5. Телепортируем основу (твоя логика интерполяции сохранена)
+        // 3. Телепортация основы
         root.setInterpolationDelay(0);
         root.setInterpolationDuration(1);
         root.teleport(nextLoc);
 
-        // 6. Визуальные эффекты (колесо и прочее)
-        wheelAngle -= 0.05f;
+        // --- ВОТ ЭТОТ БЛОК НУЖНО ДОБАВИТЬ ---
+        // 4. Запуск эффектов частиц для всех деталей корабля
+        for (Entity passenger : root.getPassengers()) {
+            if (passenger instanceof BlockDisplay bd) {
+                // Эффекты дыма, пузырей и фонарей
+                ShipEffectHandler.playEffects(bd, plugin);
+            }
+        }
+
+        // 5. Эффекты для лягушек на сиденьях (кваканье и блеск)
+        for (ArmorStand seat : seats) {
+            ShipEffectHandler.playSeatEffects(seat, plugin);
+        }
+        // ------------------------------------
+
+        // 6. Вращение колеса
+        wheelAngle += 0.05f;
         ShipPartUpdater.updateVisualParts(plugin, root, wheelAngle);
     }
+
 
     private void updateSeatsDirectly(Location nextLoc) {
         for (ArmorStand as : seats) {
             if (as == null || !as.isValid())
                 continue;
+            // ИСПРАВЛЕНО: Читаем как DOUBLE
             Double ox = as.getPersistentDataContainer().get(oxKey, PersistentDataType.DOUBLE);
             Double oy = as.getPersistentDataContainer().get(oyKey, PersistentDataType.DOUBLE);
             Double oz = as.getPersistentDataContainer().get(ozKey, PersistentDataType.DOUBLE);

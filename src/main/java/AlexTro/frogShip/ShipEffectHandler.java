@@ -28,12 +28,25 @@ public class ShipEffectHandler {
         NamespacedKey offYKey = new NamespacedKey(plugin, "offset_y");
         NamespacedKey offZKey = new NamespacedKey(plugin, "offset_z");
 
-        Float offX = part.getPersistentDataContainer().get(offXKey, PersistentDataType.FLOAT);
-        Float offY = part.getPersistentDataContainer().get(offYKey, PersistentDataType.FLOAT);
-        Float offZ = part.getPersistentDataContainer().get(offZKey, PersistentDataType.FLOAT);
+        Float fx = part.getPersistentDataContainer().get(offXKey, PersistentDataType.FLOAT);
+        Float fy = part.getPersistentDataContainer().get(offYKey, PersistentDataType.FLOAT);
+        Float fz = part.getPersistentDataContainer().get(offZKey, PersistentDataType.FLOAT);
 
-        if (offX == null || offY == null || offZ == null)
-            return;
+        double offX, offY, offZ;
+
+        if (fx != null) {
+            offX = fx.doubleValue();
+            offY = fy.doubleValue();
+            offZ = fz.doubleValue();
+        } else {
+            // Если Float не найден, пробуем Double (на всякий случай)
+            Double dx = part.getPersistentDataContainer().get(offXKey, PersistentDataType.DOUBLE);
+            if (dx == null) return; // Если и тут null, значит данных нет
+            offX = dx;
+            offY = part.getPersistentDataContainer().get(offYKey, PersistentDataType.DOUBLE);
+            offZ = part.getPersistentDataContainer().get(offZKey, PersistentDataType.DOUBLE);
+        }
+
 
         float shipYaw = 0;
         if (part.getVehicle() instanceof BlockDisplay root) {
