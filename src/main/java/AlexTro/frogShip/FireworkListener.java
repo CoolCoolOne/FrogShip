@@ -15,7 +15,7 @@ public class FireworkListener implements Listener {
     @EventHandler // ПКМ по кнопке
     public void onInteract(PlayerInteractEntityEvent e) {
         if (e.getRightClicked().getScoreboardTags().contains("ship_firework_button")) {
-            spawnFirework(e.getRightClicked().getLocation());
+            spawnFireworkSeries(e.getRightClicked().getLocation());
         }
     }
 
