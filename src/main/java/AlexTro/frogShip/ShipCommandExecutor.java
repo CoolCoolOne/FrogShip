@@ -37,13 +37,13 @@ public class ShipCommandExecutor implements CommandExecutor {
     }
 
     switch (command.getName().toLowerCase()) {
-      case "rmship":
+      case "ship_rmship":
         return handleRemoveShip(sender);
-      case "spawnship":
+      case "ship_spawnship":
         return handleSpawnShip(sender, args, targetWorld);
-      case "spawnfrogs":
+      case "ship_spawnfrogs":
         return handleSpawnFrogs(targetWorld);
-      case "spawnjason":
+      case "ship_spawnjason":
         return handleFrogMusic(sender, targetWorld);
       case "reload_shipconf":
         Settings.load(plugin); // Перезагружаем все данные из конфига в память

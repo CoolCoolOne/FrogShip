@@ -32,10 +32,11 @@ public final class FrogShip extends JavaPlugin {
 
         // Регистрируем команды в отдельном классе
         ShipCommandExecutor shipExecutor = new ShipCommandExecutor(this);
-        getCommand("spawnship").setExecutor(shipExecutor);
-        getCommand("rmship").setExecutor(shipExecutor);
-        getCommand("spawnfrogs").setExecutor(shipExecutor);
-        getCommand("spawnjason").setExecutor(shipExecutor);
+        getCommand("ship_spawnship").setExecutor(shipExecutor);
+        getCommand("ship_rmship").setExecutor(shipExecutor);
+        getCommand("ship_spawnfrogs").setExecutor(shipExecutor);
+        getCommand("ship_spawnjason").setExecutor(shipExecutor);
+        getCommand("reload_shipconf").setExecutor(shipExecutor); 
 
         // 2. Взаимодействие (Игроки + Командные блоки)
         ShipInteractionExecutor interactExecutor = new ShipInteractionExecutor(this);
@@ -57,8 +58,8 @@ public final class FrogShip extends JavaPlugin {
         Bukkit.getConsoleSender().sendMessage("§a");
         Bukkit.getConsoleSender().sendMessage("§a  ////////////////////////////////////////");
         Bukkit.getConsoleSender().sendMessage("§a  //                                    //");
-        Bukkit.getConsoleSender().sendMessage("§a  //    §2FROG SHIP §aPlugin v0.1       //");
-        Bukkit.getConsoleSender().sendMessage("§a  //    §fСтатус: §2ЗАПУЩЕН §a          //");
+        Bukkit.getConsoleSender().sendMessage("§a  //    §2FROG SHIP §aPlugin v1.1           //");
+        Bukkit.getConsoleSender().sendMessage("§a  //    §fСтатус: §2ЗАПУЩЕН §a               //");
         Bukkit.getConsoleSender().sendMessage("§a  //                                    //");
         Bukkit.getConsoleSender().sendMessage("§a  ////////////////////////////////////////");
         Bukkit.getConsoleSender().sendMessage("§a");

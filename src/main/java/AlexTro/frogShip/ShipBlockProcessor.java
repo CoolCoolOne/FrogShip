@@ -151,9 +151,10 @@ public class ShipBlockProcessor {
         // Используем Interaction (хитбокс без модели, доступен в новых версиях)
         org.bukkit.entity.Interaction interaction = (org.bukkit.entity.Interaction) loc.getWorld()
                 .spawnEntity(triggerLoc, EntityType.INTERACTION);
-        interaction.setInteractionWidth(0.5f);
-        interaction.setInteractionHeight(0.5f);
+        interaction.setInteractionWidth(0.7f);
+        interaction.setInteractionHeight(1.0f);
 
+        interaction.setResponsive(true);
         // Помечаем тегом для удаления и поиска
         interaction.addScoreboardTag("ship_firework_button");
         interaction.getPersistentDataContainer().set(plugin.getShipKey(), PersistentDataType.BYTE, (byte) 1);

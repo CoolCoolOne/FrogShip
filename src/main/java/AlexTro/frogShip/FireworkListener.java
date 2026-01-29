@@ -1,5 +1,6 @@
 package AlexTro.frogShip;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
 import org.bukkit.entity.Firework;
@@ -21,26 +22,34 @@ public class FireworkListener implements Listener {
     @EventHandler // ЛКМ по кнопке
     public void onHit(EntityDamageByEntityEvent e) {
         if (e.getEntity().getScoreboardTags().contains("ship_firework_button")) {
-            spawnFirework(e.getEntity().getLocation());
+            spawnFireworkSeries(e.getEntity().getLocation());
             e.setCancelled(true); // Чтобы не "убить" хитбокс
         }
     }
 
-    private void spawnFirework(org.bukkit.Location loc) {
-        Firework fw = loc.getWorld().spawn(loc, Firework.class);
-        FireworkMeta meta = fw.getFireworkMeta();
+private void spawnFireworkSeries(org.bukkit.Location loc) {
+    // Получаем доступ к плагину без конструктора
+    FrogShip plugin = FrogShip.getPlugin(FrogShip.class);
 
-        FireworkEffect effect = FireworkEffect.builder()
-                .withColor(Color.fromRGB(255, 50, 50), Color.ORANGE) // Насыщенный красный
-                .withFade(Color.YELLOW) // Плавный переход в желтый
-                .with(FireworkEffect.Type.BALL_LARGE) // Большой бабах
-            .withFlicker() // ИСПРАВЛЕНО: добавлено 'with'
-            .withTrail()   // ИСПРАВЛЕНО: добавлено 'with'
-                .build();
+    for (int i = 0; i < 5; i++) {
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            Firework fw = loc.getWorld().spawn(loc, Firework.class);
+            FireworkMeta meta = fw.getFireworkMeta();
 
-        meta.addEffect(effect);
-        meta.setPower(1); // Высота взлета
-        fw.setFireworkMeta(meta);
-        loc.getWorld().playSound(loc, org.bukkit.Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.0f, 1.0f);
+            // Power 3 — летит долго и высоко
+            meta.setPower(2); 
+
+            meta.addEffect(FireworkEffect.builder()
+                    .withColor(Color.RED, Color.ORANGE)
+                    .withFade(Color.YELLOW)
+                    .with(FireworkEffect.Type.BALL_LARGE)
+                    .withFlicker()
+                    .build());
+
+            fw.setFireworkMeta(meta);
+            loc.getWorld().playSound(loc, org.bukkit.Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.0f, 1.0f);
+        }, i * 20L); // Задержка между залпами (1.0 сек)
     }
+}
+
 }

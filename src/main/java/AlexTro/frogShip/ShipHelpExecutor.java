@@ -13,11 +13,11 @@ public class ShipHelpExecutor implements CommandExecutor {
         sender.sendMessage("§8§m      §r §6§lFROG SHIP §7v2026 §8§m      ");
         
         // Категория: Управление (Админ)
-        sender.sendMessage("§e§l▶ Управление кораблем");
-        sender.sendMessage(" §7/spawnship <x> <y> <z> §8- §fПризвать корабль");
-        sender.sendMessage(" §7/rmship §8- §fУдалить корабль и экипаж");
-        sender.sendMessage(" §7/spawnfrogs §8- §fЗаполнить матросами");
-        sender.sendMessage(" §7/spawnjason §8- §fПризвать Певца-лягушку");
+        sender.sendMessage("§e§l▶ Управление кораблем [для админов!]");
+        sender.sendMessage(" §7/ship_spawnship <x> <y> <z> §8- §fПризвать корабль");
+        sender.sendMessage(" §7/ship_rmship §8- §fУдалить корабль и экипаж");
+        sender.sendMessage(" §7/ship_spawnfrogs §8- §fЗаполнить матросами");
+        sender.sendMessage(" §7/ship_spawnjason §8- §fПризвать Певца-лягушку");
         
         sender.sendMessage("");
         
