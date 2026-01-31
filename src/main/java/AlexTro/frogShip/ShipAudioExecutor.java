@@ -71,19 +71,19 @@ public class ShipAudioExecutor implements CommandExecutor {
     }
 
     private void playShipMusic(Player player) {
-        player.stopSound(TRACK_ID);
+        stopShipMusic(player);
         player.playSound(player.getLocation(), TRACK_ID, SoundCategory.RECORDS, 1.0f, 1.0f);
-        player.sendMessage("§b[♪] На корабле кто-то вещает с микрофона...");
+        player.sendMessage("§b[♪] Кто-то вещает с микрофона... [настройте громкость в МУЗЫКАЛЬНЫЕ БЛОКИ]");
     }
 
     private void stopShipMusic(Player player) {
-        player.stopSound(TRACK_ID);
+        player.stopSound(TRACK_ID, SoundCategory.RECORDS);
         player.sendMessage("§7[♪] Вещание остановлено.");
     }
 
     public void stopAllMusic() {
         for (Player player : Bukkit.getOnlinePlayers()) {
-            player.stopSound(TRACK_ID);
+            player.stopSound(TRACK_ID, SoundCategory.RECORDS);
         }
     }
 }

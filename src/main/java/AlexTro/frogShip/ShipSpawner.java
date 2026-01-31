@@ -50,10 +50,19 @@ public static void spawn(FrogShip plugin, Location startLoc) {
         if (root.isValid() && !root.isDead()) {
             Bukkit.broadcastMessage("§6[FrogShip] §aВсе по местам! Поплыли.");
 
-            // ПЕРЕДАЕМ список сидений в MoveTask
-            new ShipMoveTask(plugin, root, route, shipSeats).runTaskTimer(plugin, 0L, 1L);
+            // Создаем ОДНУ задачу (в ней и движение, и теперь звук мотора)
+            ShipMoveTask task = new ShipMoveTask(plugin, root, route, shipSeats);
+
+            // Сохраняем её в главный класс для управления командами
+            plugin.setActiveMoveTask(task);
+
+            // Запускаем её ОДИН раз
+            task.runTaskTimer(plugin, 0L, 1L);
+
+            // ВТОРАЯ СТРОКА БОЛЬШЕ НЕ НУЖНА!
         }
     }, 20L * delaySeconds);
+
 }
 
 

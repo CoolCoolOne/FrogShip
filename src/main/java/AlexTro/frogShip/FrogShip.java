@@ -19,6 +19,16 @@ public final class FrogShip extends JavaPlugin {
     private NamespacedKey shipKey;
     private LogManager logManager;
 
+    private ShipMoveTask activeMoveTask;
+
+    // Метод, который мы вызывали в экзекуторе
+    public ShipMoveTask getActiveMoveTask() {
+        return activeMoveTask;
+    }
+    public void setActiveMoveTask(ShipMoveTask task) {
+        this.activeMoveTask = task;
+    }
+
     @Override
     public void onEnable() {
         saveDefaultConfig();
@@ -49,6 +59,12 @@ public final class FrogShip extends JavaPlugin {
         getCommand("audioship").setExecutor(audioExecutor);
         getCommand("stopaudioship").setExecutor(audioExecutor);
 
+        ShipMotorExecutor motorExec = new ShipMotorExecutor(this);
+        getCommand("shipmotor_on").setExecutor(motorExec);
+        getCommand("shipmotor_off").setExecutor(motorExec);
+
+        getCommand("shipfood").setExecutor(new ShipFoodExecutor(this));
+
         // РЕГИСТРИРУЕМ СОБЫТИЯ (Shift-логика)
         getServer().getPluginManager().registerEvents(new ShipEvents(this), this);
         getServer().getPluginManager().registerEvents(new FireworkListener(), this);
@@ -58,8 +74,8 @@ public final class FrogShip extends JavaPlugin {
         Bukkit.getConsoleSender().sendMessage("§a");
         Bukkit.getConsoleSender().sendMessage("§a  ////////////////////////////////////////");
         Bukkit.getConsoleSender().sendMessage("§a  //                                    //");
-        Bukkit.getConsoleSender().sendMessage("§a  //    §2FROG SHIP §aPlugin v1.1           //");
-        Bukkit.getConsoleSender().sendMessage("§a  //    §fСтатус: §2ЗАПУЩЕН §a               //");
+        Bukkit.getConsoleSender().sendMessage("§a  //    §2FROG SHIP §aPlugin v1.2           //");
+        Bukkit.getConsoleSender().sendMessage("§a  //    §fСтатус: §2ЗАПУЩЕН §a                //");
         Bukkit.getConsoleSender().sendMessage("§a  //                                    //");
         Bukkit.getConsoleSender().sendMessage("§a  ////////////////////////////////////////");
         Bukkit.getConsoleSender().sendMessage("§a");
@@ -101,11 +117,16 @@ public final class FrogShip extends JavaPlugin {
 
     public void removeAllShips() {
         // Чистим активные из списка
+        if (activeMoveTask != null) {
+            activeMoveTask.cancel();
+            activeMoveTask = null;
+        }
         for (BlockDisplay ship : new ArrayList<>(activeShips)) {
             if (ship != null) {
                 ship.getPassengers().forEach(Entity::remove);
                 ship.remove();
             }
+
         }
 
         // Глобальная зачистка по всем мирам для надежности

@@ -7,6 +7,9 @@ ship:
   arrival-radius: 1.0    # За сколько блоков начинать поворот к следующей точке
   yaw-offset: 0.0       # Твой поворот модели (был 90.0)
   schematic-name: "shipbig3_rotated5.schem"
+  motor-enabled: true
+  motor-volume: 0.6
+  motor-pitch: 0.4
   wheel:
     axis: "x"              # Было "z", при повороте на 90° стала "x"
     center-x: -1.0         # Новые координаты центра оси после поворота

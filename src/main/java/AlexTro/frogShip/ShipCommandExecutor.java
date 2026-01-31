@@ -86,7 +86,7 @@ public class ShipCommandExecutor implements CommandExecutor {
       plugin.cleanAllWorldsFromShips();
       ShipSpawner.spawn(plugin, loc);
 
-      Bukkit.broadcastMessage(String.format("§6[FrogShip] §eКорабль появился на: %d %d %d", x, y, z));
+      Bukkit.broadcastMessage(String.format("§6[FrogShip] §eКорабль прибыл на: %d %d %d", x, y, z));
     } catch (NumberFormatException e) {
       sender.sendMessage("§cОшибка координат.");
     }
@@ -104,7 +104,7 @@ public class ShipCommandExecutor implements CommandExecutor {
       return true;
     }
 
-    int count = 0;
+
     for (ArmorStand seat : emptySeats) {
       world.spawn(seat.getLocation(), Frog.class, frog -> {
         seat.addPassenger(frog);
@@ -112,9 +112,9 @@ public class ShipCommandExecutor implements CommandExecutor {
         Frog.Variant[] vars = Frog.Variant.values();
         frog.setVariant(vars[random.nextInt(vars.length)]);
       });
-      count++;
+
     }
-    Bukkit.broadcastMessage("§aЗаспавнено лягушек: " + count);
+    Bukkit.broadcastMessage("§aПассажиры лягушки тоже на палубах!");
     return true;
   }
 
@@ -146,7 +146,7 @@ public class ShipCommandExecutor implements CommandExecutor {
       frog.getPersistentDataContainer().set(plugin.getShipKey(), PersistentDataType.BYTE, (byte) 1);
     });
 
-    sender.sendMessage("§aDJ успешно заспавнен!");
+    sender.sendMessage("§aПевец успешно заспавнен!");
     return true;
   }
 }

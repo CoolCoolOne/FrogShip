@@ -32,3 +32,10 @@ commands:
     usage: "/stopaudioship [player]"
   reload_shipconf:
     description: "Перезагрузить конфигурацию плагина"
+  shipmotor_on:
+    description: "Включает цикличный звук мотора"
+  shipmotor_off:
+    description: "Выключает цикличный звук мотора"
+  shipfood:
+    description: "Получить порцию еды на борту корабля"
+    usage: "/shipfood"

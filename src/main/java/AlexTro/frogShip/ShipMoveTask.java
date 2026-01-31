@@ -20,6 +20,8 @@ public class ShipMoveTask extends BukkitRunnable {
     private final List<ArmorStand> seats;
     private final double maxDistanceSq = Math.pow(64, 2);
     private float wheelAngle = 0f;
+    private float motorVolume;
+    private float motorPitch;
 
     private final NamespacedKey oxKey, oyKey, ozKey;
 
@@ -27,6 +29,7 @@ public class ShipMoveTask extends BukkitRunnable {
         this.plugin = plugin;
         this.root = root;
         this.seats = seats;
+
 
         // Считываем всё из секции 'ship.'
         double moveSpeed = plugin.getConfig().getDouble("ship.speed", 0.1);
@@ -42,8 +45,21 @@ public class ShipMoveTask extends BukkitRunnable {
         this.oxKey = new NamespacedKey(plugin, "seat_off_x");
         this.oyKey = new NamespacedKey(plugin, "seat_off_y");
         this.ozKey = new NamespacedKey(plugin, "seat_off_z");
+
+        this.motorVolume = (float) plugin.getConfig().getDouble("ship.motor-volume", 0.5);
+        this.motorPitch = (float) plugin.getConfig().getDouble("ship.motor-pitch", 0.5);
+        this.motorEnabled = plugin.getConfig().getBoolean("ship.motor-enabled", false);
+
+        this.motorEnabled = plugin.getConfig().getBoolean("ship.motor-enabled", false);
     }
 
+    private int soundTicks = 0;
+    private boolean motorEnabled; //
+
+    // Добавляем метод для управления извне
+    public void setMotorEnabled(boolean enabled) {
+        this.motorEnabled = enabled;
+    }
 
     @Override
     public void run() {
@@ -53,6 +69,23 @@ public class ShipMoveTask extends BukkitRunnable {
         }
 
         Location currentLoc = root.getLocation();
+
+        if (motorEnabled) {
+            soundTicks++;
+            if (soundTicks >= 20) {
+                Location engineLoc = root.getLocation().subtract(0, 3, 0);
+
+                // Используем значения из конфига
+                engineLoc.getWorld().playSound(
+                        engineLoc,
+                        org.bukkit.Sound.BLOCK_PISTON_EXTEND,
+                        motorVolume,
+                        motorPitch
+                );
+
+                soundTicks = 0;
+            }
+        }
 
         // 1. Движение
         double[] xz = pathCalculator.getNextHorizontalOffset(currentLoc);

@@ -93,7 +93,7 @@ public class ShipInteractionExecutor implements CommandExecutor {
 
         ArmorStand randomSeat = seats.get(random.nextInt(seats.size()));
         randomSeat.addPassenger(player);
-        player.sendMessage("§aВы были размещены на корабле!");
+        player.sendMessage("§aВы размещены на корабле!");
         return true;
     }
 
