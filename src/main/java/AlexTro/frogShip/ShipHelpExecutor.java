@@ -24,17 +24,17 @@ public class ShipHelpExecutor implements CommandExecutor {
         
         // Категория: Для игроков
         sender.sendMessage("§a§l▶ Игровые команды");
-        sender.sendMessage(" §7/sitonship §8- §fВзойти на палубу (сесть)");
+        sender.sendMessage(" §7/sitonship §8- §fНа палубу! (сесть)");
         sender.sendMessage(" §7/sitoff §8- §fПокинуть судно");
-        sender.sendMessage(" §7/shipfood §8- §fПолучить немного еды в пути");
-        
-        sender.sendMessage("");
+        sender.sendMessage(" §7/shipfood §8- §fПолучить немного еды");
+        sender.sendMessage(" §7/ship_speedset 1 (от 0 до 5) §8- §fНастроить скорость");
         
         // Категория: Музыка
         sender.sendMessage("§b§l▶ Аудио-система");
         sender.sendMessage(" §7/audioship §8- §fВключить эфир");
         sender.sendMessage(" §7/stopaudioship §8- §fВыключить");
-        sender.sendMessage(" §7/shipmotor_on /shipmotor_off §8- §fЗвук мотора");
+        sender.sendMessage(" §7/shipmotor_on (_off) §8- §fЗвук мотора");
+
         
         sender.sendMessage("§8§m                            ");
         

@@ -32,13 +32,13 @@ public class ShipMoveTask extends BukkitRunnable {
 
 
         // Считываем всё из секции 'ship.'
-        double moveSpeed = plugin.getConfig().getDouble("ship.speed", 0.1);
+
         double arrivalRadius = plugin.getConfig().getDouble("ship.arrival-radius", 1.0);
         float rotSpeed = (float) plugin.getConfig().getDouble("ship.rotation-speed", 0.05f);
         float yawOffset = (float) plugin.getConfig().getDouble("ship.yaw-offset", 90.0f);
 
         // Инициализируем калькуляторы
-        this.pathCalculator = new ShipPathCalculator(points, arrivalRadius, moveSpeed);
+        this.pathCalculator = new ShipPathCalculator(points, arrivalRadius);
         this.rotationController = new ShipRotationController(root.getLocation().getYaw(), rotSpeed, yawOffset);
 
         // Ключи для сидений
@@ -104,8 +104,8 @@ public class ShipMoveTask extends BukkitRunnable {
         updateSeatsDirectly(nextLoc);
 
         // 3. Телепортация основы
-        root.setInterpolationDelay(0);
-        root.setInterpolationDuration(1);
+        root.setInterpolationDelay(Settings.interpDelay);
+        root.setInterpolationDuration(Settings.interpDuration);
         root.teleport(nextLoc);
 
         // --- ВОТ ЭТОТ БЛОК НУЖНО ДОБАВИТЬ ---
@@ -156,7 +156,7 @@ public class ShipMoveTask extends BukkitRunnable {
     }
 
     private void stop() {
-        Bukkit.broadcastMessage("§6[FrogShip] §eКорабль завершил маршрут.");
+        Bukkit.broadcastMessage("§6[FrogShip] §eКорабль уплыл далеко-далеку и вернулся в док!");
         plugin.removeAllShips(); // Осторожно: это удалит ВЕЕ корабли
         this.cancel();
     }

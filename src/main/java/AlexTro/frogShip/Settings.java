@@ -12,11 +12,20 @@ public class Settings {
     public static double frogAmbienceChance;
     public static String schematicName;
 
+    public static double shipSpeed;
+    public static double speedMultiplier = 1.0;
+
+    public static int interpDuration;
+    public static int interpDelay;
+
     public static void load(FrogShip plugin) {
         plugin.saveDefaultConfig(); // Создаст файл, если его нет
         plugin.reloadConfig();      // Обновит данные из файла
         FileConfiguration config = plugin.getConfig();
 
+        interpDuration = config.getInt("ship.interpolation-duration", 1);
+        interpDelay = config.getInt("ship.interpolation-delay", 0);
+        shipSpeed = config.getDouble("ship.speed", 0.1);
         bubbleCount = config.getInt("effects.water_bubbles_amount", 1);
         smokeCount = config.getInt("effects.smoke_amount", 1);
         lanternCount = config.getInt("effects.lantern_glow_amount", 1);

@@ -39,3 +39,6 @@ commands:
   shipfood:
     description: "Получить порцию еды на борту корабля"
     usage: "/shipfood"
+  ship_speedset: # <--- ДОБАВИЛИ КОМАНДУ
+    description: "Установить множитель скорости корабля (0-5)"
+    usage: "/ship_speedset <0-5>"

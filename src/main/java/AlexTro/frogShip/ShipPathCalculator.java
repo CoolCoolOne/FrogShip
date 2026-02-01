@@ -11,13 +11,12 @@ public class ShipPathCalculator {
     private double waveTime = 0;
     
     private final double arrivalRadiusSq;
-    private final double baseSpeed;
+
 
     // Конструктор теперь принимает параметры из конфига через ShipMoveTask
-    public ShipPathCalculator(List<Vector> points, double arrivalRadius, double baseSpeed) {
+    public ShipPathCalculator(List<Vector> points, double arrivalRadius) {
         this.points = points;
         this.arrivalRadiusSq = arrivalRadius * arrivalRadius;
-        this.baseSpeed = baseSpeed;
     }
 
     public double[] getNextHorizontalOffset(Location currentLoc) {
@@ -36,6 +35,7 @@ public class ShipPathCalculator {
 
         if (distSq < 0.0001) return new double[]{0, 0};
 
+        double baseSpeed = Settings.shipSpeed * Settings.speedMultiplier;
         // 2. Логика замедления перед точкой (чтобы не было резких рывков)
         double currentSpeed = baseSpeed;
         double dist = Math.sqrt(distSq);

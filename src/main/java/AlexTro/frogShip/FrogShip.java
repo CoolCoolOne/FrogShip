@@ -14,14 +14,14 @@ import java.util.List;
 
 public final class FrogShip extends JavaPlugin {
 
-    // Эти переменные остаются здесь, так как корабль всегда один
+
     private final List<BlockDisplay> activeShips = new ArrayList<>();
     private NamespacedKey shipKey;
     private LogManager logManager;
 
     private ShipMoveTask activeMoveTask;
 
-    // Метод, который мы вызывали в экзекуторе
+
     public ShipMoveTask getActiveMoveTask() {
         return activeMoveTask;
     }
@@ -64,6 +64,7 @@ public final class FrogShip extends JavaPlugin {
         getCommand("shipmotor_off").setExecutor(motorExec);
 
         getCommand("shipfood").setExecutor(new ShipFoodExecutor(this));
+        getCommand("ship_speedset").setExecutor(new ShipSpeedCommand());
 
         // РЕГИСТРИРУЕМ СОБЫТИЯ (Shift-логика)
         getServer().getPluginManager().registerEvents(new ShipEvents(this), this);
@@ -116,6 +117,8 @@ public final class FrogShip extends JavaPlugin {
     }
 
     public void removeAllShips() {
+        Bukkit.getOnlinePlayers().forEach(p -> p.stopSound("frogship.track", org.bukkit.SoundCategory.RECORDS));
+        Settings.speedMultiplier = 1.0;
         // Чистим активные из списка
         if (activeMoveTask != null) {
             activeMoveTask.cancel();
