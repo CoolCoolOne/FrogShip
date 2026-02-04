@@ -69,6 +69,7 @@ public final class FrogShip extends JavaPlugin {
         // РЕГИСТРИРУЕМ СОБЫТИЯ (Shift-логика)
         getServer().getPluginManager().registerEvents(new ShipEvents(this), this);
         getServer().getPluginManager().registerEvents(new FireworkListener(), this);
+        getServer().getPluginManager().registerEvents(new HornListener(), this);
 
         cleanAllWorldsFromShips();
 
@@ -109,7 +110,8 @@ public final class FrogShip extends JavaPlugin {
                 }
             }
             for (org.bukkit.entity.Interaction inter : world.getEntitiesByClass(org.bukkit.entity.Interaction.class)) {
-                if (inter.getScoreboardTags().contains("ship_firework_button")) {
+                if (inter.getScoreboardTags().contains("ship_firework_button") ||
+                        inter.getScoreboardTags().contains("ship_horn_button")) { // ДОБАВЛЕНО
                     inter.remove();
                 }
             }
@@ -146,9 +148,12 @@ public final class FrogShip extends JavaPlugin {
                     });
 
             // НОВОЕ: Удаляем хитбоксы кнопок
+
             w.getEntitiesByClass(org.bukkit.entity.Interaction.class).stream()
-                    .filter(inter -> inter.getScoreboardTags().contains("ship_firework_button"))
+                    .filter(inter -> inter.getScoreboardTags().contains("ship_firework_button") ||
+                            inter.getScoreboardTags().contains("ship_horn_button")) // ДОБАВЛЕНО
                     .forEach(Entity::remove);
+
         });
 
         activeShips.clear();

@@ -142,9 +142,13 @@ public class ShipMoveTask extends BukkitRunnable {
             }
         }
         for (Entity entity : root.getNearbyEntities(20, 20, 20)) {
-        if (entity instanceof org.bukkit.entity.Interaction && entity.getScoreboardTags().contains("ship_firework_button")) {
-            moveDynamicPart(entity, nextLoc);
-        }
+            if (entity instanceof org.bukkit.entity.Interaction) {
+            if (entity.getScoreboardTags().contains("ship_firework_button") ||
+                    entity.getScoreboardTags().contains("ship_horn_button")) {
+
+                moveDynamicPart(entity, nextLoc);
+            }
+            }
     }
     }
 

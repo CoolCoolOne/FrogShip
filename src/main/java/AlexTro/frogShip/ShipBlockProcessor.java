@@ -40,6 +40,9 @@ public class ShipBlockProcessor {
         if (mat == Material.PALE_OAK_BUTTON) {
             spawnFireworkTrigger(plugin, startLoc, offX, offY, offZ);
         }
+        if (mat == Material.BAMBOO_BUTTON) {
+            spawnHornTrigger(plugin, startLoc, offX, offY, offZ);
+        }
 
         // 2. СОЗДАНИЕ ВИЗУАЛЬНОЙ ЧАСТИ
         BlockDisplay part = (BlockDisplay) startLoc.getWorld().spawnEntity(startLoc, EntityType.BLOCK_DISPLAY);
@@ -167,5 +170,34 @@ public class ShipBlockProcessor {
         interaction.getPersistentDataContainer().set(oy, PersistentDataType.DOUBLE, (double) offY);
         interaction.getPersistentDataContainer().set(oz, PersistentDataType.DOUBLE, (double) offZ + 0.5);
     }
+
+    private static void spawnHornTrigger(FrogShip plugin, Location loc, float offX, float offY, float offZ) {
+        // Центрируем хитбокс на блоке кнопки
+        Location triggerLoc = loc.clone().add(offX + 0.5, offY, offZ + 0.5);
+
+        // Создаем сущность Interaction (невидимый хитбокс)
+        org.bukkit.entity.Interaction interaction = (org.bukkit.entity.Interaction) loc.getWorld()
+                .spawnEntity(triggerLoc, EntityType.INTERACTION);
+
+        interaction.setInteractionWidth(0.7f);
+        interaction.setInteractionHeight(1.0f);
+        interaction.setResponsive(true);
+
+        // Тег для нашего слушателя звуков (из первой части кода)
+        interaction.addScoreboardTag("ship_horn_button");
+
+        // Тег плагина для удаления при очистке корабля
+        interaction.getPersistentDataContainer().set(plugin.getShipKey(), PersistentDataType.BYTE, (byte) 1);
+
+        // Сохраняем оффсеты для системы перемещения корабля
+        NamespacedKey ox = new NamespacedKey(plugin, "seat_off_x");
+        NamespacedKey oy = new NamespacedKey(plugin, "seat_off_y");
+        NamespacedKey oz = new NamespacedKey(plugin, "seat_off_z");
+
+        interaction.getPersistentDataContainer().set(ox, PersistentDataType.DOUBLE, (double) offX + 0.5);
+        interaction.getPersistentDataContainer().set(oy, PersistentDataType.DOUBLE, (double) offY);
+        interaction.getPersistentDataContainer().set(oz, PersistentDataType.DOUBLE, (double) offZ + 0.5);
+    }
+
 
 }

@@ -4,16 +4,41 @@ main: AlexTro.frogShip.FrogShip
 api-version: '1.21'
 depend: [WorldEdit]
 commands:
-  spawnship:
+  frogship:
+    description: "Справка по командам FrogShip"
+    usage: "/frogship"
+    aliases: [fs, ship, froghelp]
+  ship_spawnship:
     description: Заспавнить корабль.
-    usage: /spawnship <x> <y> <z>
+    usage: /ship_spawnship <x> <y> <z>
   sitonship:
     description: Сесть на корабль.
   sitoff:
     description: "Слезть с корабля"
-  spawnfrogs:
+  ship_spawnfrogs:
     description: "Заспавнить лягушек на бамбуковые сиденья"
-  rmship:
+  ship_rmship:
     description: "Удалить текущий корабль"
-  frogmusic:
+  ship_spawnjason:
     description: Призывает Пашкета и включает музыку.
+  embark:
+    description: "Посадить игрока на корабль (для КБ)"
+    usage: "/embark <player>"
+  audioship:
+    description: "Включить музыку игроку"
+    usage: "/audioship <player>"
+  stopaudioship:
+    description: "Остановить вещание для игрока"
+    usage: "/stopaudioship [player]"
+  reload_shipconf:
+    description: "Перезагрузить конфигурацию плагина"
+  shipmotor_on:
+    description: "Включает цикличный звук мотора"
+  shipmotor_off:
+    description: "Выключает цикличный звук мотора"
+  shipfood:
+    description: "Получить порцию еды на борту корабля"
+    usage: "/shipfood"
+  ship_speedset: # <--- ДОБАВИЛИ КОМАНДУ
+    description: "Установить множитель скорости корабля (0-5)"
+    usage: "/ship_speedset <0-5>"
