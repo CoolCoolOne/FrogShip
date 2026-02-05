@@ -23,11 +23,14 @@ public class ShipRotationController {
 
         // Нормализация разницы углов
         float diff = targetYaw - smoothYaw;
-        while (diff < -180) diff += 360;
-        while (diff > 180) diff -= 360;
+        while (diff < -180)
+            diff += 360;
+        while (diff > 180)
+            diff -= 360;
 
         // Плавный поворот
-        smoothYaw += diff * rotationSpeed;
+        float effectiveRotation = (float) Math.min(rotationSpeed * Settings.speedMultiplier, 1.0f);
+        smoothYaw += diff * effectiveRotation;
         return smoothYaw;
     }
 }
