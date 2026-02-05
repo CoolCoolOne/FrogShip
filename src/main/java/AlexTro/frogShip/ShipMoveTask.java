@@ -141,7 +141,7 @@ public class ShipMoveTask extends BukkitRunnable {
                 ShipPartUpdater.syncSeatRotation(as, nextLoc, ox, oy, oz, plugin);
             }
         }
-        for (Entity entity : root.getNearbyEntities(20, 20, 20)) {
+        for (Entity entity : root.getNearbyEntities(15, 7, 15)) {
             if (entity instanceof org.bukkit.entity.Interaction) {
             if (entity.getScoreboardTags().contains("ship_firework_button") ||
                     entity.getScoreboardTags().contains("ship_horn_button")) {

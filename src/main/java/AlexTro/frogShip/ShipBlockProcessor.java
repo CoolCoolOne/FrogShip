@@ -40,9 +40,9 @@ public class ShipBlockProcessor {
         if (mat == Material.PALE_OAK_BUTTON) {
             spawnFireworkTrigger(plugin, startLoc, offX, offY, offZ);
         }
-        if (mat == Material.BAMBOO_BUTTON) {
-            spawnHornTrigger(plugin, startLoc, offX, offY, offZ);
-        }
+if (mat == Material.BAMBOO_BUTTON || mat == Material.OAK_BUTTON) {
+    spawnHornTrigger(plugin, startLoc, offX, offY, offZ);
+}
 
         // 2. СОЗДАНИЕ ВИЗУАЛЬНОЙ ЧАСТИ
         BlockDisplay part = (BlockDisplay) startLoc.getWorld().spawnEntity(startLoc, EntityType.BLOCK_DISPLAY);
