@@ -72,20 +72,40 @@ public class ShipMoveTask extends BukkitRunnable {
 
         if (motorEnabled) {
             soundTicks++;
-            if (soundTicks >= 20) {
-                Location engineLoc = root.getLocation().subtract(0, 3, 0);
 
-                // Используем значения из конфига
+            // Получаем вектор направления взгляда (куда смотрит нос корабля)
+            Vector direction = root.getLocation().getDirection().normalize();
+
+            // 1. Звук мотора (на 20-й тик)
+            if (soundTicks >= 20) {
+                // Смещение: 3 вниз и 1 ВПЕРЕД по вектору направления
+                Location engineLoc = root.getLocation().subtract(0, 3, 0).add(direction.clone().multiply(1));
+
                 engineLoc.getWorld().playSound(
                         engineLoc,
                         org.bukkit.Sound.BLOCK_PISTON_EXTEND,
                         motorVolume,
                         motorPitch
                 );
-
                 soundTicks = 0;
             }
+
+            // 2. Звук воды (на 10-й тик)
+            if (soundTicks == 10) {
+                // Смещение: 4 вниз и 10 НАЗАД от центра корабля
+                Location waterLoc = root.getLocation()
+                        .subtract(0, 4, 0)
+                        .subtract(direction.clone().multiply(10.0));
+
+                waterLoc.getWorld().playSound(
+                        waterLoc,
+                        org.bukkit.Sound.WEATHER_RAIN, // Бесшовный шум
+                        1.0f, // Хорошая громкость, так как звук за бортом
+                        0.5f  // Минимальный питч для эффекта глубокого рокота
+                );
+            }
         }
+
 
         // 1. Движение
         double[] xz = pathCalculator.getNextHorizontalOffset(currentLoc);
