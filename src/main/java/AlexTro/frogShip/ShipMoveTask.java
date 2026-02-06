@@ -92,18 +92,31 @@ public class ShipMoveTask extends BukkitRunnable {
 
             // 2. Звук воды (на 10-й тик)
             if (soundTicks == 10) {
-                // Смещение: 4 вниз и 10 НАЗАД от центра корабля
                 Location waterLoc = root.getLocation()
                         .subtract(0, 4, 0)
-                        .subtract(direction.clone().multiply(10.0));
+                        .subtract(direction.clone().multiply(13.0));
+
+                double time = System.currentTimeMillis() / 1000.0;
+                double lfo = Math.sin(time * 0.6);
+
+                // Громкость: база 0.6 + колебание 0.1 (итого от 0.5 до 0.7)
+                // Это сделает звук фоновым и мягким
+                float dynamicVolume = (float) (0.4 + (lfo * 0.1));
+
+                // Питч оставляем низким (0.55), чтобы не было "песка" и "огня"
+                float dynamicPitch = (float) (0.55 + (lfo * 0.08));
 
                 waterLoc.getWorld().playSound(
                         waterLoc,
-                        org.bukkit.Sound.WEATHER_RAIN, // Бесшовный шум
-                        1.0f, // Хорошая громкость, так как звук за бортом
-                        0.5f  // Минимальный питч для эффекта глубокого рокота
+                        org.bukkit.Sound.WEATHER_RAIN,
+                        dynamicVolume,
+                        dynamicPitch
                 );
             }
+
+
+
+
         }
 
 
