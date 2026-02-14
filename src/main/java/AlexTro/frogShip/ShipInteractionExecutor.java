@@ -21,7 +21,7 @@ public class ShipInteractionExecutor implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
-        // Команда: /sitonship (только для игрока, который сам её вводит)
+        // Команда: /sitonship (только для игрока)
         if (command.getName().equalsIgnoreCase("sitonship")) {
             if (!(sender instanceof Player player)) {
                 sender.sendMessage("Эту команду может использовать только игрок!");
@@ -30,34 +30,62 @@ public class ShipInteractionExecutor implements CommandExecutor {
             return trySeatPlayer(player);
         }
 
-        // Команда: /embark <игрок> (может выполнить командный блок)
+        // Команда: /embark <цель> [-all]
         if (command.getName().equalsIgnoreCase("embark")) {
             if (args.length < 1) {
-                sender.sendMessage("§cИспользование: /embark <ник> или /embark @p");
+                sender.sendMessage("§cИспользование: /embark <ник/@p> [-all]");
                 return true;
             }
 
-            Player target;
+            // 1. Проверяем флаг -all (он может быть вторым аргументом)
+            boolean seatAll = args.length > 1 && args[1].equalsIgnoreCase("-all");
 
-            if (args[0].equalsIgnoreCase("@p")) {
-                // Логика поиска ближайшего игрока
-                if (sender instanceof Player p) {
-                    target = p; // Если пишет игрок, ближайший — он сам
-                } else if (sender instanceof org.bukkit.command.BlockCommandSender block) {
-                    // Если пишет КБ, ищем ближайшего в радиусе 50 блоков
-                    Location loc = block.getBlock().getLocation();
-                    target = loc.getWorld().getNearbyEntities(loc, 50, 50, 50).stream()
-                            .filter(e -> e instanceof Player)
-                            .map(e -> (Player) e)
-                            // Сортируем по дистанции, чтобы найти именно ближайшего
-                            .min((p1, p2) -> Double.compare(p1.getLocation().distance(loc),
-                                    p2.getLocation().distance(loc)))
-                            .orElse(null);
-                } else {
-                    target = null;
+            // 2. Определяем точку отсчета. Используем эффективно финальную переменную для лямбд
+            Location tempOrigin = null;
+            if (sender instanceof Player p) {
+                tempOrigin = p.getLocation();
+            } else if (sender instanceof org.bukkit.command.BlockCommandSender block) {
+                tempOrigin = block.getBlock().getLocation();
+            }
+
+            final Location origin = tempOrigin;
+
+            // 3. Логика массовой посадки
+            if (seatAll) {
+                if (origin == null) {
+                    sender.sendMessage("§cЭту операцию нельзя выполнить из консоли (нет координат).");
+                    return true;
                 }
+
+                List<Player> targets = origin.getWorld().getNearbyEntities(origin, 50, 50, 50).stream()
+                        .filter(e -> e instanceof Player)
+                        .map(e -> (Player) e)
+                        .toList();
+
+                if (targets.isEmpty()) {
+                    sender.sendMessage("§cИгроки в радиусе 50 блоков не найдены!");
+                    return true;
+                }
+
+                for (Player p : targets) {
+                    trySeatPlayer(p);
+                }
+                return true;
+            }
+
+            // 4. Логика посадки одного игрока
+            Player target;
+            if (args[0].equalsIgnoreCase("@p")) {
+                if (origin == null) {
+                    sender.sendMessage("§cНе удалось определить координаты для поиска @p.");
+                    return true;
+                }
+                target = origin.getWorld().getNearbyEntities(origin, 50, 50, 50).stream()
+                        .filter(e -> e instanceof Player)
+                        .map(e -> (Player) e)
+                        .min((p1, p2) -> Double.compare(p1.getLocation().distance(origin), p2.getLocation().distance(origin)))
+                        .orElse(null);
             } else {
-                // Если ввели обычный ник
                 target = Bukkit.getPlayer(args[0]);
             }
 
@@ -78,6 +106,8 @@ public class ShipInteractionExecutor implements CommandExecutor {
 
         return false;
     }
+
+
 
     // Универсальный метод посадки игрока на любое свободное место
     private boolean trySeatPlayer(Player player) {

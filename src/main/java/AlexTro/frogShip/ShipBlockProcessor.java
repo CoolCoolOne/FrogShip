@@ -28,8 +28,14 @@ public class ShipBlockProcessor {
 
         // 1. ЛОГИКА СИДЕНИЙ (теперь сохраняем результат в переменную)
         if (mat == Material.LIGHT) {
-            if (data instanceof org.bukkit.block.data.type.Light lightData && lightData.getLevel() == 1) {
-                createdSeat = spawnSeat(plugin, startLoc, offX, offY, offZ, mat);
+            if (data instanceof org.bukkit.block.data.type.Light lightData) {
+                if (lightData.getLevel() == 1) {
+                    createdSeat = spawnSeat(plugin, startLoc, offX, offY, offZ, mat);
+                }
+                // НОВОЕ: Обработка уровня 2 для подпевки
+                else if (lightData.getLevel() == 2) {
+                    spawnBackingVocalsSeats(plugin, startLoc, offX, offY, offZ);
+                }
             }
         }
 
@@ -197,6 +203,46 @@ if (mat == Material.BAMBOO_BUTTON || mat == Material.OAK_BUTTON) {
         interaction.getPersistentDataContainer().set(ox, PersistentDataType.DOUBLE, (double) offX + 0.5);
         interaction.getPersistentDataContainer().set(oy, PersistentDataType.DOUBLE, (double) offY);
         interaction.getPersistentDataContainer().set(oz, PersistentDataType.DOUBLE, (double) offZ + 0.5);
+    }
+
+    private static void spawnBackingVocalsSeats(FrogShip plugin, Location loc, float offX, float offY, float offZ) {
+        // 1. Создаем нижнее место (Base)
+        ArmorStand baseSeat = createVocalStand(plugin, loc, offX, offY, offZ, "bottom");
+        baseSeat.addScoreboardTag("ship_seat_vocal_bottom");
+
+        // 2. Создаем верхнее место (Top)
+        // Оно будет чуть выше (на 0.6 или около того, подберем в конфиге)
+        ArmorStand topSeat = createVocalStand(plugin, loc, offX, offY, offZ, "top");
+        topSeat.addScoreboardTag("ship_seat_vocal_top");
+    }
+
+    private static ArmorStand createVocalStand(FrogShip plugin, Location loc, float offX, float offY, float offZ, String type) {
+        // Читаем настройки из нового раздела конфига backing-vocals
+        double centerX = plugin.getConfig().getDouble("backing-vocals." + type + ".offset-x", 0.5);
+        double addY = plugin.getConfig().getDouble("backing-vocals." + type + ".offset-y", 1.0);
+        double centerZ = plugin.getConfig().getDouble("backing-vocals." + type + ".offset-z", 0.5);
+        float finalYaw = (float) plugin.getConfig().getDouble("backing-vocals.yaw", 0.0); // По умолчанию как у DJ
+
+        Location seatLoc = loc.clone().add(offX + centerX, offY + addY, offZ + centerZ);
+        seatLoc.setYaw(finalYaw);
+
+        ArmorStand seat = (ArmorStand) loc.getWorld().spawnEntity(seatLoc, EntityType.ARMOR_STAND);
+        seat.setVisible(false);
+        seat.setGravity(false);
+        seat.setSmall(true);
+        seat.setMarker(true);
+        seat.addScoreboardTag("ship_seat"); // Общий тег для удаления
+
+        // Сохраняем PDC для MoveTask
+        NamespacedKey ox = new NamespacedKey(plugin, "seat_off_x");
+        NamespacedKey oy = new NamespacedKey(plugin, "seat_off_y");
+        NamespacedKey oz = new NamespacedKey(plugin, "seat_off_z");
+
+        seat.getPersistentDataContainer().set(ox, PersistentDataType.DOUBLE, offX + centerX);
+        seat.getPersistentDataContainer().set(oy, PersistentDataType.DOUBLE, offY + addY);
+        seat.getPersistentDataContainer().set(oz, PersistentDataType.DOUBLE, offZ + centerZ);
+
+        return seat;
     }
 
 

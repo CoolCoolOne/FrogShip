@@ -119,22 +119,30 @@ public class ShipCommandExecutor implements CommandExecutor {
   }
 
   private boolean handleFrogMusic(CommandSender sender, World world) {
+    // 1. Ищем ту самую единственную стойку по тегу
     ArmorStand djSeat = world.getEntitiesByClass(ArmorStand.class).stream()
-        .filter(as -> as.getScoreboardTags().contains("ship_seat_dj"))
-        .filter(as -> as.getPassengers().isEmpty())
-        .findFirst().orElse(null);
+            .filter(as -> as.getScoreboardTags().contains("ship_seat_dj"))
+            .findFirst()
+            .orElse(null);
 
     if (djSeat == null) {
       sender.sendMessage("§cМесто для певца не найдено!");
       return true;
     }
 
+    // 2. ПРОВЕРКА: Если на этом месте КТО-ТО уже сидит — выходим
+    // Это предотвратит спам и создание дубликатов
+    if (!djSeat.getPassengers().isEmpty()) {
+      sender.sendMessage("§eДжейсон КВАс уже на своем посту!");
+      return true;
+    }
+
+    // 3. СПАВН (только если место было пустое)
     world.spawn(djSeat.getLocation(), Frog.class, frog -> {
       frog.setCustomName("§6§lКВАс");
       frog.setCustomNameVisible(true);
       frog.setInvulnerable(true);
-      frog.setGlowing(false);
-      frog.setAI(true);
+      frog.setAI(true); // Для взгляда на игрока
       frog.setCollidable(false);
       frog.setVariant(Frog.Variant.TEMPERATE);
 
@@ -142,11 +150,16 @@ public class ShipCommandExecutor implements CommandExecutor {
         frog.getAttribute(Attribute.SCALE).setBaseValue(2.5);
       }
 
-      djSeat.addPassenger(frog);
+      // Помечаем ключом для удаления при /ship_rmship
       frog.getPersistentDataContainer().set(plugin.getShipKey(), PersistentDataType.BYTE, (byte) 1);
+
+      djSeat.addPassenger(frog);
     });
+// Внутри handleFrogMusic после спавна КВАса:
+    new ShipChorusManager(plugin).spawnBackingGroup(world);
 
     sender.sendMessage("§aПевец успешно заспавнен!");
     return true;
   }
+
 }

@@ -156,6 +156,8 @@ public class ShipMoveTask extends BukkitRunnable {
         }
         // ------------------------------------
 
+        new ShipChorusManager(plugin).syncChorus(seats);
+
         // 6. Вращение колеса
         wheelAngle += 0.05f;
         ShipPartUpdater.updateVisualParts(plugin, root, wheelAngle);

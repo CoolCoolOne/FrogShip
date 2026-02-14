@@ -22,23 +22,51 @@ public class ShipAudioExecutor implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        
-        // --- Логика включения ---
+
+        // Определяем, есть ли флаг -all (обычно это второй аргумент: /audioship @p -all)
+        boolean isAll = args.length > 1 && args[1].equalsIgnoreCase("-all");
+
+        // 1. Команда включения: /audioship <цель> [-all]
         if (command.getName().equalsIgnoreCase("audioship")) {
+            if (isAll) {
+                Location origin = getOrigin(sender);
+                if (origin == null) {
+                    sender.sendMessage("§cНе удалось определить координаты для -all.");
+                    return true;
+                }
+                // Ищем всех в радиусе 50 и включаем
+                origin.getWorld().getNearbyEntities(origin, 50, 50, 50).stream()
+                        .filter(e -> e instanceof Player)
+                        .map(e -> (Player) e)
+                        .forEach(this::playShipMusic);
+                sender.sendMessage("§aМузыка включена для всех в радиусе 50 блоков.");
+                return true;
+            }
+
+            // Обычная логика для одного игрока
             Player target = (args.length > 0) ? getTarget(sender, args[0]) : (sender instanceof Player p ? p : null);
-            
             if (target != null) {
                 playShipMusic(target);
             } else {
-                sender.sendMessage("§cИгрок не найден или не указан.");
+                sender.sendMessage("§cИгрок не найден.");
             }
             return true;
         }
 
-        // --- Логика выключения ---
+        // 2. Команда выключения: /stopaudioship <цель> [-all]
         if (command.getName().equalsIgnoreCase("stopaudioship")) {
-            Player target = (args.length > 0) ? getTarget(sender, args[0]) : (sender instanceof Player p ? p : null);
+            if (isAll) {
+                Location origin = getOrigin(sender);
+                if (origin == null) return true;
 
+                origin.getWorld().getNearbyEntities(origin, 50, 50, 50).stream()
+                        .filter(e -> e instanceof Player)
+                        .map(e -> (Player) e)
+                        .forEach(this::stopShipMusic);
+                return true;
+            }
+
+            Player target = (args.length > 0) ? getTarget(sender, args[0]) : (sender instanceof Player p ? p : null);
             if (target != null) {
                 stopShipMusic(target);
             } else {
@@ -49,6 +77,15 @@ public class ShipAudioExecutor implements CommandExecutor {
 
         return false;
     }
+
+    // Вспомогательный метод для получения точки отсчета (чтобы не дублировать код)
+    private Location getOrigin(CommandSender sender) {
+        if (sender instanceof Player p) return p.getLocation();
+        if (sender instanceof BlockCommandSender b) return b.getBlock().getLocation();
+        if (sender instanceof Entity e) return e.getLocation();
+        return null;
+    }
+
 
     // Универсальный метод поиска цели (Ник или @p)
     private Player getTarget(CommandSender sender, String arg) {
