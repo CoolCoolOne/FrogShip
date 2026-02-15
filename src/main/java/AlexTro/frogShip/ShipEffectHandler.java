@@ -96,7 +96,7 @@ public class ShipEffectHandler {
         }
 
         // Музыка (красный ковер)
-        else if (mat == Material.RED_CARPET && Settings.musicNoteCount > 0) {
+        else if ((mat == Material.RED_CARPET || mat == Material.RED_WOOL) && Settings.musicNoteCount > 0) {
             if (ThreadLocalRandom.current().nextDouble() < Settings.musicNoteChance) {
                 // Поднимаем ноты над ковром
                 Location noteLoc = realLoc.clone().add(0, 1.0, 0);

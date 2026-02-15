@@ -165,26 +165,28 @@ public class ShipMoveTask extends BukkitRunnable {
 
 
     private void updateSeatsDirectly(Location nextLoc) {
+        // Теперь ТУТ едут ВСЕ: и КВАс, и нижние, и верхние лягушки
         for (ArmorStand as : seats) {
-            if (as == null || !as.isValid())
-                continue;
-            // ИСПРАВЛЕНО: Читаем как DOUBLE
+            if (as == null || !as.isValid()) continue;
+
             Double ox = as.getPersistentDataContainer().get(oxKey, PersistentDataType.DOUBLE);
             Double oy = as.getPersistentDataContainer().get(oyKey, PersistentDataType.DOUBLE);
             Double oz = as.getPersistentDataContainer().get(ozKey, PersistentDataType.DOUBLE);
+
             if (ox != null && oy != null && oz != null) {
                 ShipPartUpdater.syncSeatRotation(as, nextLoc, ox, oy, oz, plugin);
             }
         }
+
+        // Здесь оставляем только кнопки
         for (Entity entity : root.getNearbyEntities(15, 7, 15)) {
             if (entity instanceof org.bukkit.entity.Interaction) {
-            if (entity.getScoreboardTags().contains("ship_firework_button") ||
-                    entity.getScoreboardTags().contains("ship_horn_button")) {
-
-                moveDynamicPart(entity, nextLoc);
+                if (entity.getScoreboardTags().contains("ship_firework_button") ||
+                        entity.getScoreboardTags().contains("ship_horn_button")) {
+                    moveDynamicPart(entity, nextLoc);
+                }
             }
-            }
-    }
+        }
     }
 
     private boolean shouldRemove() {
@@ -195,7 +197,7 @@ public class ShipMoveTask extends BukkitRunnable {
     }
 
     private void stop() {
-        Bukkit.broadcastMessage("§6[FrogShip] §eКорабль уплыл далеко-далеку и вернулся в док!");
+        Bukkit.broadcastMessage("§6[FrogShip] §eКорабль уплыл далеко-далеко и вернулся в док!");
         plugin.removeAllShips(); // Осторожно: это удалит ВЕЕ корабли
         this.cancel();
     }

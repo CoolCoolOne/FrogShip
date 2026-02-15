@@ -34,6 +34,16 @@ public class ShipHelpExecutor implements CommandExecutor {
         sender.sendMessage(" §7/audioship §8- §fВключить эфир");
         sender.sendMessage(" §7/stopaudioship §8- §fВыключить");
         sender.sendMessage(" §7/shipmotor_on (_off) §8- §fЗвук мотора");
+        net.md_5.bungee.api.chat.TextComponent link = new net.md_5.bungee.api.chat.TextComponent(" §6§n▶ Авторы, музыка, посмотреть (клик) ◀");
+        link.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.OPEN_URL, "https://aleksey199.temp.swtest.ru/credits.html"));
+        link.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.ComponentBuilder("§7Нажмите, чтобы открыть сайт").create()));
+
+// Отправляем сообщение игроку (нужно привести sender к Player или использовать spigot().sendMessage)
+        if (sender instanceof org.bukkit.entity.Player) {
+            ((org.bukkit.entity.Player) sender).spigot().sendMessage(link);
+        } else {
+            sender.sendMessage("§6Ссылка: https://aleksey199.temp.swtest.ru/credits.html");
+        }
 
         
         sender.sendMessage("§8§m                            ");

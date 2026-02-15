@@ -16,10 +16,10 @@ public class ShipFoodExecutor implements CommandExecutor {
 
     // Список доступной еды
     private final Material[] shipFood = {
-            Material.COOKED_COD, Material.COOKED_SALMON,
-            Material.BREAD, Material.COOKED_BEEF,
+            Material.BREAD,
             Material.APPLE, Material.COOKIE, Material.GLOW_BERRIES,
-            Material.BAKED_POTATO, Material.PUMPKIN_PIE
+            Material.BAKED_POTATO, Material.PUMPKIN_PIE,
+            Material.SLIME_BALL
     };
 
     public ShipFoodExecutor(FrogShip plugin) {
@@ -46,7 +46,7 @@ public class ShipFoodExecutor implements CommandExecutor {
         // Выдаем игроку
         player.getInventory().addItem(new ItemStack(food, amount));
 
-        player.sendMessage("§6[⚓] Корабельный кок выдал вам: §f" +
+        player.sendMessage("§6[⚓] Шеф-повар плавучей кухни вам: §f" +
                 food.name().replace("_", " ").toLowerCase() + " x" + amount);
 
         player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);

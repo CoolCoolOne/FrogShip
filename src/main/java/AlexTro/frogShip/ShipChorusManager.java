@@ -29,18 +29,22 @@ public class ShipChorusManager {
         for (ArmorStand seat : vocalSeats) {
             world.spawn(seat.getLocation(), Frog.class, frog -> {
                 frog.setInvulnerable(true);
-                frog.setAI(true);
+                frog.setAI(false);
                 frog.setCollidable(false);
                 frog.setSilent(true);
 
                 // ЛОГИКА ЦВЕТА И РАЗМЕРА
+                // ЛОГИКА ЦВЕТА И РАЗМЕРА (СТРОГАЯ)
                 if (seat.getScoreboardTags().contains("ship_seat_vocal_bottom")) {
-                    frog.setVariant(Frog.Variant.TEMPERATE); // ЗЕЛЕНАЯ (Нижняя)
+                    // УРОВЕНЬ СВЕТА 2
+                    frog.setVariant(Frog.Variant.COLD); // 100% Зеленая
                     if (frog.getAttribute(Attribute.SCALE) != null) {
-                        frog.getAttribute(Attribute.SCALE).setBaseValue(1.1);
+                        frog.getAttribute(Attribute.SCALE).setBaseValue(1.2);
                     }
-                } else {
-                    frog.setVariant(Frog.Variant.COLD); // БЕЛАЯ (Верхняя)
+                }
+                else if (seat.getScoreboardTags().contains("ship_seat_vocal_top")) {
+                    // УРОВЕНЬ СВЕТА 3
+                    frog.setVariant(Frog.Variant.COLD);      // 100% Белая
                     if (frog.getAttribute(Attribute.SCALE) != null) {
                         frog.getAttribute(Attribute.SCALE).setBaseValue(0.8);
                     }
@@ -53,34 +57,59 @@ public class ShipChorusManager {
     }
 
     public void syncChorus(List<ArmorStand> seats) {
-        Frog jason = null;
-
-        // 1. Ищем КВАса по имени
-        for (ArmorStand seat : seats) {
-            if (seat.getScoreboardTags().contains("ship_seat_dj")) {
-                for (Entity p : seat.getPassengers()) {
-                    if (p instanceof Frog f && "§6§lКВАс".equals(f.getCustomName())) {
-                        jason = f;
-                        break;
-                    }
-                }
-            }
-        }
-
+        Frog jason = findJason(seats);
         if (jason == null) return;
 
-        // 2. Синхронизируем всех хористов
+        // 1. Генерируем ОДИН шанс на весь хор в этом тике (примерно раз в 3-5 секунд)
+        // 0.01 при 20 тиках в секунду даст срабатывание примерно раз в 5 секунд
+        boolean shouldCroakNow = java.util.concurrent.ThreadLocalRandom.current().nextDouble() < 0.01;
+
+        // 2. Если шанс выпал — заставляем КВАса и хористов надуться ОДНОВРЕМЕННО
+        if (shouldCroakNow) {
+            playCroakAnimation(jason); // Главный запевает
+        }
+
         for (ArmorStand seat : seats) {
             if (seat.getScoreboardTags().contains("ship_seat_vocal_bottom") ||
                     seat.getScoreboardTags().contains("ship_seat_vocal_top")) {
 
                 for (Entity p : seat.getPassengers()) {
                     if (p instanceof Frog vocal) {
-                        // Поворачиваем голову точно туда же, куда смотрит КВАс
+                        // Поворот головы (всегда за Джейсоном)
                         vocal.setRotation(jason.getLocation().getYaw(), jason.getLocation().getPitch());
+
+                        // Подпевка надувается только если запел Джейсон
+                        if (shouldCroakNow) {
+                            playCroakAnimation(vocal);
+                        }
                     }
                 }
             }
         }
+    }
+
+    private void playCroakAnimation(Frog frog) {
+        try {
+            // Используем строку, чтобы IDE не ругалась при компиляции
+            frog.playEffect(org.bukkit.EntityEffect.valueOf("FROG_CROAK"));
+        } catch (Exception ignored) {
+            // Если на сервере нет этого эффекта, просто игнорируем
+        }
+    }
+
+
+
+
+    private Frog findJason(List<ArmorStand> seats) {
+        for (ArmorStand seat : seats) {
+            if (seat.getScoreboardTags().contains("ship_seat_dj")) {
+                for (Entity p : seat.getPassengers()) {
+                    if (p instanceof Frog f && "§6§lКВАс".equals(f.getCustomName())) {
+                        return f;
+                    }
+                }
+            }
+        }
+        return null;
     }
 }
