@@ -44,7 +44,7 @@ public class ShipEvents implements Listener {
         lastTransfer.put(player.getUniqueId(), now);
 
         // 4. Поиск нового места
-        List<ArmorStand> availableSeats = player.getWorld().getNearbyEntities(player.getLocation(), 10, 5, 10).stream()
+        List<ArmorStand> availableSeats = player.getWorld().getNearbyEntities(player.getLocation(), 15, 5, 15).stream()
                 .filter(e -> e instanceof ArmorStand as && as.getScoreboardTags().contains("ship_seat_player"))
                 .map(e -> (ArmorStand) e)
                 .filter(as -> !as.equals(currentSeat) && as.getPassengers().isEmpty())

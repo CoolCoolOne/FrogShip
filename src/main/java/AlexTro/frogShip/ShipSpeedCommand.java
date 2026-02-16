@@ -9,10 +9,7 @@ public class ShipSpeedCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (!sender.hasPermission("frogship.admin")) {
-            sender.sendMessage("§cУ вас нет прав!");
-            return true;
-        }
+
 
         if (args.length < 1) {
             sender.sendMessage("§6[FrogShip] §eИспользование: /ship_speedset [0-5]");
